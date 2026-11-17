@@ -35,7 +35,8 @@
     "bouldering": 6,
     "football": 6,
     "tennis": 5,
-    "running": 5
+    "running": 5,
+    "other": 6
   },
   "capacities": [
     "engine",
@@ -165,7 +166,8 @@
   "light_set_weight": 0.5,
   "interference": {
     "window_h": 6,
-    "legs_fitness_multiplier": 0.85
+    "legs_fitness_multiplier": 0.85,
+    "lower_share_min": 0.5
   },
   "recovery_modifier": {
     "sleep_short_h": 6,
@@ -181,7 +183,8 @@
     "clamp": [
       0.85,
       1.5
-    ]
+    ],
+    "baseline_days": 7
   },
   "fatigue_steps": [
     0.25,
@@ -200,7 +203,10 @@
     },
     "e1rm_max_reps": 10,
     "calibration_min_points": 8,
-    "calibration_min_r2": 0.3
+    "calibration_min_r2": 0.3,
+    "run_trend_days": 28,
+    "calibration_strong_r2": 0.5,
+    "delta_window_days": 84
   },
   "learned_effects": {
     "window_h": [
@@ -213,6 +219,54 @@
     "some_n": 6,
     "weak_n": 3,
     "bootstrap_ci": 0.9,
-    "longterm_min_weeks": 8
+    "longterm_min_weeks": 8,
+    "longterm_min_abs_r": 0.3,
+    "bootstrap_n": 1000
+  },
+  "rpe_from_hrr": {
+    "bands": [
+      0.4,
+      0.55,
+      0.65,
+      0.75,
+      0.85
+    ],
+    "rpe": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "strength_bonus": 1,
+    "cap": 9,
+    "median_days": 90
+  },
+  "srpe_c_refit_min": 10,
+  "hr_quality": {
+    "max_missing": 0.3,
+    "max_gap_s": 10,
+    "min_sd_bpm": 2
+  },
+  "hrrest_window_days": 30,
+  "gym_lift_mix": {
+    "lower": 0.5,
+    "pull": 0.5
+  },
+  "state": {
+    "fit_ref_days": 365,
+    "fat_ref_days": 90,
+    "fat_ref_min_share": 0.2,
+    "fit_change_days": 28
+  },
+  "whatif": {
+    "rpe": {
+      "easy": 3,
+      "normal": 5,
+      "hard": 7
+    },
+    "days": 7,
+    "median_days": 90
   }
 }

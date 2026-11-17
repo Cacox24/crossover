@@ -4,11 +4,13 @@
 import type { Session, Night, GymSet } from "../engine/types";
 import params from "../engine/params.json";
 import { deriveHrMax } from "../engine/hrmax";
+import { existsSync } from "node:fs";
 import { readJson, writeJson, stripGps } from "./lib";
 import { mapGarmin, mapFitbit, MIN_SESSION_MIN, type Mapped } from "./mapping";
 import type { GarminActivity } from "./garmin";
 
 const round1 = (x: number) => Math.round(x * 10) / 10;
+const TIMEZONE = "Europe/London"; // home time zone (Garmin activity details); used for day boundaries
 const excluded: Record<string, number> = {};
 const exclude = (src: string, type: string) => { const k = `${src}:${type}`; excluded[k] = (excluded[k] ?? 0) + 1; };
 let tooShort = 0;
@@ -92,6 +94,11 @@ for (const p of exercise) {
 const sessions = stripGps([...garminSessions, ...fitbitSessions].map((c) => c.session))
   .sort((a, b) => a.start.localeCompare(b.start));
 
+// Optional check-ins (BUILD_PLAN §5.5): checkins.json = { "<session id>": { rpe?, topGrade? } }
+const checkins = existsSync("checkins.json") ? readJson<Record<string, { rpe?: number; topGrade?: number }>>("checkins.json") : {};
+let nCheckins = 0;
+for (const s of sessions) { const c = checkins[s.id]; if (c) { Object.assign(s, c); nCheckins++; } }
+
 // --- Nights -------------------------------------------------------------------
 // Night.date = local wake-up date (Fitbit daily RHR/HRV use the same day).
 const ymd = (d: { year: number; month: number; day: number }) =>
@@ -126,7 +133,7 @@ const hrMax = deriveHrMax(sessions);
 
 writeJson("data/sessions.json", sessions);
 writeJson("data/nights.json", nightList, true);
-writeJson("data/profile.json", { hrMax: hrMax?.hrMax, hrMaxFrom: hrMax }, true);
+writeJson("data/profile.json", { hrMax: hrMax?.hrMax, hrMaxFrom: hrMax, timezone: TIMEZONE }, true);
 
 // --- Report -------------------------------------------------------------------
 const cols = ["running", "football", "tennis", "bouldering", "gym", "other"] as const;
@@ -145,6 +152,7 @@ console.log(`\nSessions: ${sessions.length} (garmin ${garminSessions.length}, fi
 console.log(`Duplicates removed (Fitbit copy dropped, Garmin kept): ${duplicates.length}`);
 for (const d of duplicates) console.log(`  ${d.fitbit}  ↔ garmin ${d.garmin}  overlap ${d.overlap}`);
 console.log(`Dropped < ${MIN_SESSION_MIN} min: ${tooShort}`);
+console.log(`Check-ins applied: ${nCheckins}`);
 console.log("Excluded by type:", excluded);
 const withAll = nightList.filter((n) => n.sleepH && n.rmssd && n.rhr).length;
 console.log(`\nNights: ${nightList.length} (${nightList[0]?.date} → ${nightList.at(-1)?.date})`);

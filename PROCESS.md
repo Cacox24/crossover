@@ -42,3 +42,65 @@ Other (endurance), and `RACKET_SPORTS` and `VOLLEYBALL_BEACH` to Other (court). 
 but it's only 8 sessions and Other load only. A swim-specific split would need a new params entry.
 
 **What I changed and why:** _(to fill in)_
+
+## 2026-11-17 11:25 Block 2: engine
+
+**Asked:** build the engine (BUILD_PLAN §6): load → split → state → progression → attribution →
+effects, with params from §11 and a fixture generator, writing `data.json` and `data.fixture.json`.
+
+**Produced:**
+- `engine/` (pure TypeScript, no I/O, so the browser can use it too):
+  - `load.ts` (§3): TRIMPexp from the HR stream, or from avg HR when there's no stream; sRPE with RPE estimated from %HRR; refit of `c`.
+  - `split.ts` (§4): F/D splits, gym movement groups from set counts, the interference rule.
+  - `state.ts` (§5): daily fitness stores per capacity × source sport, fatigue stores with the sleep/HRV/RHR modifier, FatNorm, fatigue step, recovery day.
+  - `progression.ts` (§6): W rows, 365-day refs, pace @150 bpm on steady runs, calibration.
+  - `attribution.ts` (§7), `effects.ts` (§8.1 + §8.3 with seeded bootstrap), `whatif.ts` (§9).
+  - `fixture.ts` (12 weeks of fake data) and `index.ts` (`runEngine` → the §12 shape).
+- `sync/build.ts` → `public/data.json` (124 KB, engine 37 ms) and `public/data.fixture.json`. Data and fixture both run through the same engine.
+- `engine/test/engine.test.ts`: 7 checks, all passing (`npm test`).
+  - §3.1 worked example ≈ 96.
+  - RPE bands.
+  - F/D rows sum to 1.
+  - Gym shares.
+  - Contributions sum to the model.
+  - Deltas sum to the total.
+  - What if < 50 ms and adds fatigue only.
+- Normalise now writes the time zone (Europe/London) into `profile.json` and applies an optional `checkins.json`.
+- §11 in PROGRESSION_LOGIC and `params.json` match (checked by script). New keys are the [assumption] values that were only in the prose, plus the decisions below.
+
+**Real-data result:**
+- Engine fitness 75 (−11% over 28 d), Speed 90, Legs 88, Pull 20.
+- 84 steady runs. Pace @150 trend is 386 s/km.
+- Running calibration R² 0.07 → not calibrated (●○○), so deltas are shown in modelled index points.
+- Learned effects that pass the evidence rules:
+  - run the day before a run → +28 s/km (n=12, ●●○)
+  - gym-heavy weeks → faster pace trend (r −0.42, n=40, ●●●)
+
+**Decisions made in code (new params, all [assumption]):**
+- The HR stream counts as flat if its SD is < 2 bpm. Gaps are capped at 10 s.
+- The HR-CV steadiness check only applies to runs with a stream (3 of 96). Other runs skip it.
+- The gym progression row is 50/50 `gym_lower`/`gym_pull`.
+- The interference rule applies to "lower-body" gym sessions, meaning sessions where ≥ 50% of known sets are lower-body.
+- Gym sessions without known sets use the mean group shares.
+- Calibration evidence: R² ≥ 0.5 → ●●●.
+- Long-term effects are hidden when |r| < 0.3.
+- Uncalibrated 12-week deltas use index points, not % of the start value (that blew up when the start was near 0).
+
+**Open issue found:** the §5.4 FatNorm reference includes Other sessions. The 25 short e-bike rides in 90 days
+pull the "typical session" down, so Engine reads 5.1 (overloaded) and Legs 3.5. Without Other in the
+reference it would be 2.2 and 1.35.
+
+**What I changed and why:** _(to fill in)_
+
+## 2026-11-17 11:35 Block 2 follow-up: FatNorm reference without Other
+
+**Asked:** leave Other sessions out of the §5.4 FatNorm reference.
+
+**Produced:** PROGRESSION_LOGIC §5.4 updated and `fatigueRefs` filters out Other. Other still adds fatigue;
+it just no longer defines the "typical session". New test, 8 of 8 tests pass.
+- Engine 5.10 → 2.24 (very heavy, recovered 25 Nov).
+- Legs 3.52 → 1.35 (heavy, 20 Nov).
+- Speed 0.52 → 0.47 (light).
+
+**What I changed and why:** chose to exclude Other because short e-bike commutes were defining the
+"typical session" and made a normal week read as overloaded.

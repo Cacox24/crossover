@@ -6,8 +6,11 @@
     "sync:garmin": "tsx sync/garmin.ts",
     "sync:google": "tsx sync/google.ts",
     "sync:normalise": "tsx sync/normalise.ts",
-    "sync": "tsx sync/garmin.ts && tsx sync/google.ts && tsx sync/normalise.ts",
-    "typecheck": "tsc --noEmit"
+    "sync": "tsx sync/garmin.ts && tsx sync/google.ts && tsx sync/normalise.ts && tsx sync/build.ts",
+    "typecheck": "tsc --noEmit",
+    "sync:build": "tsx sync/build.ts",
+    "build": "tsx sync/normalise.ts && tsx sync/build.ts",
+    "test": "tsx --test engine/test/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -26,3 +26,11 @@ export interface Session {
 }
 
 export interface Night { date: string; sleepH?: number; rmssd?: number; rhr?: number }
+
+export type Params = typeof import("./params.json");
+export type SessionSport = Sport | "other";
+export const SPORTS: Sport[] = ["running", "football", "tennis", "bouldering", "gym"];
+export const SOURCES: SessionSport[] = [...SPORTS, "other"];
+export const CAPACITIES: Capacity[] = ["engine", "speed", "legs", "pull"];
+export type Vec = Record<Capacity, number>;
+export const zeroVec = (): Vec => ({ engine: 0, speed: 0, legs: 0, pull: 0 });

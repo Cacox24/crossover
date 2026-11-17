@@ -394,8 +394,10 @@ FitIndex[c] = 100 × Fit[c](today) / max(Fit[c]) over the last 365 days
 **Fatigue level** per capacity, in "typical sessions still in the body":
 ```
 FatNorm[c] = Fat[c](today) / ref[c]
-ref[c]     = median of D[sport][c] × load over sessions in the last 90 days where D[sport][c] ≥ 0.2
+ref[c]     = median of D[sport][c] × load over sessions of the five sports in the last 90 days where D[sport][c] ≥ 0.2
 ```
+Other sessions are left out of `ref` (they still add fatigue): short e‑bike
+commutes would otherwise define the "typical session" and inflate FatNorm.
 
 | FatNorm | Step (DESIGN.md §3.3) |
 |---|---|
@@ -583,7 +585,11 @@ and starting values; my own data checks them.
   },
   "dedupe_min_overlap": 0.5,
   "gym_weights_reliable": false,
-  "default_rpe": { "gym": 6, "bouldering": 6, "football": 6, "tennis": 5, "running": 5 },
+  "default_rpe": { "gym": 6, "bouldering": 6, "football": 6, "tennis": 5, "running": 5, "other": 6 },
+  "rpe_from_hrr": { "bands": [0.40, 0.55, 0.65, 0.75, 0.85], "rpe": [3, 4, 5, 6, 7, 8], "strength_bonus": 1, "cap": 9, "median_days": 90 },
+  "srpe_c_refit_min": 10,
+  "hr_quality": { "max_missing": 0.3, "max_gap_s": 10, "min_sd_bpm": 2 },
+  "hrrest_window_days": 30,
   "capacities": ["engine", "speed", "legs", "pull"],
   "tau_fit": { "engine": 42, "speed": 30, "legs": 60, "pull": 60, "specific": 42 },
   "tau_fat": { "engine": 5, "speed": 2, "legs": 2.5, "pull": 3 },
@@ -611,14 +617,17 @@ and starting values; my own data checks them.
   },
   "heavy_set_threshold": 0.80,
   "light_set_weight": 0.5,
-  "interference": { "window_h": 6, "legs_fitness_multiplier": 0.85 },
+  "interference": { "window_h": 6, "legs_fitness_multiplier": 0.85, "lower_share_min": 0.5 },
+  "gym_lift_mix": { "lower": 0.5, "pull": 0.5 },
+  "state": { "fit_ref_days": 365, "fat_ref_days": 90, "fat_ref_min_share": 0.2, "fit_change_days": 28 },
   "recovery_modifier": {
     "sleep_short_h": 6, "sleep_short": 0.20,
     "sleep_long_h": 8, "sleep_long": -0.10,
     "hrv_low_sd": 1, "hrv_low": 0.20,
     "hrv_high_sd": 1, "hrv_high": -0.05,
     "rhr_high_bpm": 5, "rhr_high": 0.10,
-    "clamp": [0.85, 1.5]
+    "clamp": [0.85, 1.5],
+    "baseline_days": 7
   },
   "fatigue_steps": [0.25, 0.5, 1.0, 2.0, 3.0],
   "recovered_threshold": 0.5,
@@ -627,7 +636,10 @@ and starting values; my own data checks them.
     "steady_run": { "min_minutes": 20, "max_hr_cv": 0.08, "max_gain_m_per_km": 15 },
     "e1rm_max_reps": 10,
     "calibration_min_points": 8,
-    "calibration_min_r2": 0.3
+    "calibration_min_r2": 0.3,
+    "run_trend_days": 28,
+    "calibration_strong_r2": 0.5,
+    "delta_window_days": 84
   },
   "learned_effects": {
     "window_h": [6, 36],
@@ -635,8 +647,11 @@ and starting values; my own data checks them.
     "swc_sd": 0.2,
     "strong_n": 15, "some_n": 6, "weak_n": 3,
     "bootstrap_ci": 0.90,
-    "longterm_min_weeks": 8
-  }
+    "longterm_min_weeks": 8,
+    "longterm_min_abs_r": 0.3,
+    "bootstrap_n": 1000
+  },
+  "whatif": { "rpe": { "easy": 3, "normal": 5, "hard": 7 }, "days": 7, "median_days": 90 }
 }
 ```
 
