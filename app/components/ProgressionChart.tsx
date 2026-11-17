@@ -1,5 +1,6 @@
 // DESIGN.md §7.4 boost-stacked progression chart. Hand-written SVG + d3-shape.
-import { useMemo, useRef, useState, useLayoutEffect } from "react";
+import { useMemo, useState } from "react";
+import { useWidth } from "../hooks";
 import { area, line, curveMonotoneX } from "d3-shape";
 import type { Sport, SessionSport } from "../../engine/types";
 import { SPORT_META } from "../sports";
@@ -19,18 +20,6 @@ export interface ChartSpec {
   layerValue: (key: SessionSport, i: number) => string; // tooltip value per layer
   markers: { day: string; sport: Sport }[];
   markerSports: Sport[];
-}
-
-function useWidth() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(720);
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(([e]) => setW(Math.max(280, Math.floor(e.contentRect.width))));
-    ro.observe(ref.current);
-    return () => ro.disconnect();
-  }, []);
-  return [ref, w] as const;
 }
 
 const H = 320, M = { top: 12, right: 8, bottom: 28, left: 44 }, LANE = 12;

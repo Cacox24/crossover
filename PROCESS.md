@@ -205,3 +205,23 @@ acceptance was updated to match.
   - 390 px: the drawer fills the width with no overflow. Tests and build pass.
 
 **What I changed and why:** _(to fill in)_
+
+## 2026-11-17 13:05 Block 7: Mix page
+
+**Asked:** build the Mix page (BUILD_PLAN §5.3, DESIGN.md §7.8).
+
+**Produced:**
+- `app/components/WeeklyBars.tsx`: one bar per week for the last 12 weeks, stacked in sport order with Other last. 2 px white
+  gaps, 4 px radius on the top of the bar only, square at the baseline. Horizontal gridlines and one y-axis. The hovered
+  week stays solid and the others fade. The tooltip shows the week, total load and each sport's load × session count.
+- `app/pages/Mix.tsx`:
+  - Load chart with the table toggle (week × sport, load (count), total).
+  - Share column in sport order (`[glyph] Running 54%`). It uses a largest-remainder rounding, so the shares add up to exactly 100.
+  - Each share has a thin sport-colored bar under it.
+- `useWidth` moved into `app/hooks.ts` so both charts share it.
+- Checked in the browser:
+  - Real data, last 12 weeks: Running 54%, Football 18%, Bouldering 8%, Gym 1%, Other 19%.
+  - The week of 2 Nov reads 348 = 137 + 106 + 76 + 29, and the table shows the same numbers.
+  - 390 px with no horizontal scroll. The build passes.
+
+**What I changed and why:** _(to fill in)_

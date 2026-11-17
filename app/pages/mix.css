@@ -1,0 +1,5 @@
+.wbars .tick { fill: var(--grey-2); font-size: 12px; font-weight: 450; font-stretch: 87%; font-variant-numeric: tabular-nums; }
+.wbars svg { display: block; }
+.share-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 4px var(--s2); padding: var(--s2) 0; }
+.share-bar { grid-column: 2 / 4; height: 4px; background: var(--page); }
+.share-bar > div { height: 100%; border-radius: 0 2px 2px 0; }
