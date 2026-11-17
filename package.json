@@ -3,17 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync": "tsx sync/garmin.ts && tsx sync/google.ts && tsx sync/normalise.ts && tsx sync/build.ts",
     "sync:garmin": "tsx sync/garmin.ts",
     "sync:google": "tsx sync/google.ts",
     "sync:normalise": "tsx sync/normalise.ts",
-    "sync": "tsx sync/garmin.ts && tsx sync/google.ts && tsx sync/normalise.ts && tsx sync/build.ts",
-    "typecheck": "tsc --noEmit",
     "sync:build": "tsx sync/build.ts",
-    "build": "tsx sync/normalise.ts && tsx sync/build.ts",
     "test": "tsx --test engine/test/*.test.ts",
-    "dev": "vite",
-    "preview": "vite preview",
-    "build:app": "vite build"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/d3-shape": "^3.2.0",

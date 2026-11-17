@@ -140,8 +140,9 @@ export function runEngine({ sessions: raw, nights, hrMax, tz, today, params: p }
   return {
     synced: today, tz, hrMax, c: { value: round(c, 3), fitted: cFitted },
     capacities, sports, effects, weeks,
-    sessions: sessions.filter((s) => dayDiff(s.day, today) < 365).map((s) => ({
-      id: s.id, sport: s.sport, ...(s.otherKind ? { otherKind: s.otherKind } : {}), start: s.start, day: s.day,
+    // Opaque ids: device activity ids aren't needed by the app and don't belong in a public file.
+    sessions: sessions.filter((s) => dayDiff(s.day, today) < 365).map((s, i) => ({
+      id: `s${i}`, sport: s.sport, ...(s.otherKind ? { otherKind: s.otherKind } : {}), start: s.start, day: s.day,
       durationMin: s.durationMin, load: round(s.load, 1), method: s.method, ...(s.hrFromAvg && s.method === "trimp" ? { avgHrOnly: true } : {}),
     })),
     whatif, params: p,

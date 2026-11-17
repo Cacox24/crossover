@@ -17,7 +17,7 @@ type Route = keyof typeof ROUTES | "kit";
 function useRoute(): Route {
   const read = (): Route => {
     const r = location.hash.replace(/^#\/?/, "");
-    return r in ROUTES || r === "kit" ? (r as Route) : "now";
+    return r in ROUTES || (r === "kit" && import.meta.env.DEV) ? (r as Route) : "now";
   };
   const [route, setRoute] = useState<Route>(read);
   useEffect(() => {
