@@ -225,3 +225,28 @@ acceptance was updated to match.
   - 390 px with no horizontal scroll. The build passes.
 
 **What I changed and why:** _(to fill in)_
+
+## 2026-11-17 13:40 Block 8: ship
+
+**Asked:** do a real sync, deploy to Vercel, and check the link in a private window.
+
+**Produced:**
+- Full real sync: 2 new Fitbit runs, both duplicates of Garmin runs, so the numbers didn't change.
+- Deploy fixes:
+  - `npm run build` is now just `vite build`, so Vercel can build without keys. The sync moved to `npm run sync`.
+  - `README.md` added.
+  - `noindex` meta tag, because the URL is meant to be unlisted.
+  - `#/kit` only works in development.
+  - Session IDs in `data.json` replaced with opaque `s0…sN`, because device activity IDs don't belong in a public file.
+- Pushed to https://github.com/Cacox24/crossover with GitHub Desktop. Before the push I checked the history for secrets:
+  no `.env`, `secrets/`, `raw/` or `data/` files, and no tokens.
+- Deployed to Vercel from GitHub: https://crossover-kappa-tawny.vercel.app.
+- Checked logged out (curl, plus a fresh browser tab without cookies): `/`, `/data.json` and the fixture
+  all return 200 with no login. Now, Progression, Mix and What if render, Archivo loads, and the console shows no errors.
+
+**Notes:**
+- The push from Terminal failed because the GitHub login saved in the keychain had expired. At one point I was handed a
+  token in chat and didn't use it, and I asked for it to be revoked instead. GitHub Desktop's browser sign-in solved it.
+- Still open: re-sync on submission day (23 Nov) with `npm run sync`, then commit and push. Vercel then redeploys on its own.
+
+**What I changed and why:** _(to fill in)_

@@ -314,10 +314,10 @@ I changed and why. The video needs evidence of judgement, not just output.
 
 ## 10. Definition of done
 
-- [ ] Live URL opens with no login, on desktop and mobile, in a private window
+- [x] Live URL opens with no login, on desktop and mobile, in a private window (https://crossover-kappa-tawny.vercel.app, 17 Nov)
 - [ ] Real data, synced the day of submission
-- [ ] Progression, Now, Mix and What if work with no errors in the console
+- [x] Progression, Now, Mix and What if work with no errors in the console
 - [ ] No sentences in the UI; only sport colors are colored
-- [ ] Repo has README, the three .md files and PROCESS.md
+- [x] Repo has README, the three .md files and PROCESS.md
 - [ ] Video ≤ 3 min, unlisted, plays without context
 - [ ] Email sent with both links
