@@ -8,7 +8,21 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": [
+      "node",
+      "vite/client"
+    ],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx"
   },
-  "include": ["engine", "sync/**/*.ts"]
+  "include": [
+    "engine",
+    "sync/**/*.ts",
+    "app",
+    "vite.config.ts"
+  ]
 }

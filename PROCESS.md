@@ -104,3 +104,27 @@ it just no longer defines the "typical session". New test, 8 of 8 tests pass.
 
 **What I changed and why:** chose to exclude Other because short e-bike commutes were defining the
 "typical session" and made a normal week read as overloaded.
+
+## 2026-11-17 11:50 Block 3: shell + shared components
+
+**Asked:** build the app shell and the shared components (BUILD_PLAN §4, DESIGN.md §3–§11).
+
+**Produced:**
+- Vite + React + TypeScript, with `index.html` at the root and the app in `app/`. Dependencies are from BUILD_PLAN §2:
+  `react`, `@phosphor-icons/react`, `vite`, `@vitejs/plugin-react`.
+- `app/tokens.css`: the DESIGN.md §11 tokens and the §4 type roles. Archivo variable comes from Google Fonts with both axes;
+  width is set via `font-stretch`.
+- Shell: 64 px top bar, nav (Now · Progression · Mix, hash routes), What if button, synced date, 12-column
+  grid that stacks below 900 px, and a 420 px right drawer with `Close` (contents come in the What if block). Error state is `⚠ —`.
+- Components:
+  - Sport glyph and chip (Phosphor, sport color, aria-label). Other = grey `DotsThreeCircle`.
+  - Capacity row: black or sport-split fitness bar with 2 px gaps, hatched fatigue bar, dashed projection.
+  - Fatigue hatch: one tile definition used as both a CSS background and an SVG `<pattern>`.
+  - Figure L/M/S, signed change `↓ 11%`, evidence `●●○ 9`, session chip, tooltip, icon-only table toggle and table view.
+- `#/kit` (not in the nav): every component rendered with real data, for checking.
+- Checked in the browser: desktop and 390 px (no horizontal scroll), table toggle, drawer open/Escape,
+  no console errors. `vite build` passes (264 KB JS, 82 KB gzipped).
+
+**Design decision added to DESIGN.md §7.2:** the fatigue bar length is FatNorm ÷ 3, capped, so a full bar = overloaded.
+
+**What I changed and why:** _(to fill in)_

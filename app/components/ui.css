@@ -1,0 +1,59 @@
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.unit { color: var(--grey-1); }
+
+/* Panel (§5) */
+.panel { background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-panel); padding: var(--s5); min-width: 0; }
+.panel-title { margin-bottom: var(--s4); }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s4); }
+
+/* Glyph + chip */
+.glyph { flex: none; display: block; }
+.chip {
+  display: inline-flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s3);
+  background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-control); cursor: pointer;
+}
+.chip:hover { border-color: var(--grey-3); }
+.chip.is-selected { border-color: var(--black); box-shadow: inset 0 0 0 1px var(--black); }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+  background: none; border: 1px solid transparent; border-radius: var(--r-control); cursor: pointer; color: var(--grey-1);
+}
+.icon-btn:hover { border-color: var(--grey-4); color: var(--black); }
+
+/* Figures */
+.figure { display: inline-flex; align-items: baseline; gap: 2px; white-space: nowrap; }
+.change { white-space: nowrap; }
+.evidence { white-space: nowrap; letter-spacing: 0.05em; }
+.evidence .t-fig-s { letter-spacing: 0; }
+
+/* Session chip (§7.6) */
+.session-chip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+/* Tooltip (floating layer) */
+.tooltip {
+  position: absolute; pointer-events: none; z-index: 10; transform: translate(12px, -50%);
+  background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-control);
+  box-shadow: var(--shadow-float); padding: var(--s2) var(--s3); white-space: nowrap;
+}
+
+/* Table view (§8) */
+.table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { text-align: left; color: var(--grey-2); font-weight: 450; padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: 1px solid var(--grey-3); }
+.data-table td { padding: var(--s2) var(--s3) var(--s2) 0; border-bottom: 1px solid var(--grey-4); }
+.data-table .num { text-align: right; }
+
+/* Capacity row (§7.2) */
+.cap-row { display: grid; grid-template-columns: 96px 1fr 104px; align-items: center; gap: var(--s4); padding: var(--s3) 0; border-radius: var(--r-control); }
+.cap-row.is-hl .cap-name { text-decoration: underline; text-underline-offset: 4px; }
+.cap-bars { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bar-track { position: relative; height: 12px; }
+.bar-track.fat { height: 10px; }
+.bar-fit { display: flex; gap: 2px; height: 100%; }
+.bar-seg { height: 100%; min-width: 1px; }
+.bar-seg:last-child { border-radius: 0 var(--r-mark) var(--r-mark) 0; }
+.bar-fat { height: 100%; border-radius: 0 var(--r-mark) var(--r-mark) 0; }
+.bar-proj { position: absolute; top: 0; height: 100%; border: 1.5px dashed var(--black); border-left: none; border-radius: 0 var(--r-mark) var(--r-mark) 0; }
+.cap-fig { display: flex; align-items: baseline; justify-content: flex-end; gap: var(--s2); }
+@media (max-width: 520px) { .cap-row { grid-template-columns: 72px 1fr 88px; gap: var(--s2); } }

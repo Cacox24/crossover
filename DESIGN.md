@@ -233,6 +233,7 @@ Engine       ████████████████████░░�
 - Top bar: fitness, solid black (or split by sport, §3.4), with the number
   and change on the right.
 - Bottom bar: fatigue in the matching grey + hatch step (§3.3), with no number.
+  Length is FatNorm ÷ 3, capped, so a full bar means overloaded.
 - Never merged into a single score.
 
 ### 7.3 Body map
