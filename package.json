@@ -1,0 +1,17 @@
+{
+  "name": "crossover",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:garmin": "tsx sync/garmin.ts",
+    "sync:google": "tsx sync/google.ts",
+    "sync:normalise": "tsx sync/normalise.ts",
+    "sync": "tsx sync/garmin.ts && tsx sync/google.ts && tsx sync/normalise.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
