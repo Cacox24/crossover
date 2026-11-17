@@ -244,6 +244,10 @@ legs and hips for Legs; forearms, shoulders and upper back for Pull & grip;
 chest and core for Engine and Speed. No labels on the drawing; region names
 appear on hover.
 
+P0 (front only) uses one region group per capacity: chest = Engine, core =
+Speed, shoulders and arms = Pull & grip, hips and legs = Legs. Hovering a
+region highlights its capacity row, and the reverse.
+
 ### 7.4 Boost‑stacked progression chart
 
 - One sport at a time, switched with five glyph chips above the chart.

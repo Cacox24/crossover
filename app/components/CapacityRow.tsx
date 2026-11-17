@@ -19,6 +19,7 @@ export interface CapacityRowProps {
   projectedFatNorm?: number;                           // §3.5 dashed outline
   projectedFatStep?: number;
   highlighted?: boolean;
+  showFigure?: boolean;                                // default true
   onHover?: (on: boolean) => void;
 }
 
@@ -30,7 +31,7 @@ export function CapacityRow(p: CapacityRowProps) {
   const proj = p.projectedFatNorm;
   const fatW = fatPct(p.fatNorm), projW = proj !== undefined ? fatPct(proj) : undefined;
   return (
-    <div className={`cap-row ${p.highlighted ? "is-hl" : ""}`} onMouseEnter={() => p.onHover?.(true)} onMouseLeave={() => p.onHover?.(false)}>
+    <div className={`cap-row ${p.highlighted ? "is-hl" : ""} ${p.showFigure === false ? "no-fig" : ""}`} onMouseEnter={() => p.onHover?.(true)} onMouseLeave={() => p.onHover?.(false)}>
       <span className="t-label cap-name">{CAPACITY_NAME[p.capacity]}</span>
       <div className="cap-bars">
         <div className="bar-track" role="img" aria-label={`${CAPACITY_NAME[p.capacity]} fitness ${fit}`}>
@@ -47,10 +48,12 @@ export function CapacityRow(p: CapacityRowProps) {
           )}
         </div>
       </div>
-      <span className="cap-fig">
-        <span className="t-fig-m">{fit}</span>
-        {p.fitChange !== undefined && <Change value={p.fitChange * 100} unit="%" />}
-      </span>
+      {p.showFigure !== false && (
+        <span className="cap-fig">
+          <span className="t-fig-m">{fit}</span>
+          {p.fitChange !== undefined && <Change value={p.fitChange * 100} unit="%" />}
+        </span>
+      )}
     </div>
   );
 }

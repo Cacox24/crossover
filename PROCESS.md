@@ -157,3 +157,27 @@ shows real pace @150" isn't met by the real data. Real pace is shown as numbers 
 **What I changed and why:** kept the modelled view for running. A pace chart claiming a link that the data
 doesn't support (R² 0.07) would be dishonest. Showing the weak evidence is part of the pitch. BUILD_PLAN §5.2
 acceptance was updated to match.
+
+## 2026-11-17 12:30 Block 5: Now page
+
+**Asked:** build the Now page (BUILD_PLAN §5.1): capacity rows, a simple body map, the right column and the session strip.
+
+**Produced:**
+- `app/components/BodyMap.tsx`: front-only silhouette with 4 region groups. Each region is filled with its
+  capacity's fatigue step, using the same hatch definition as the bars.
+  - Mirroring the paths with an SVG transform also flipped the hatch into chevrons. I now mirror the coordinates
+    instead, so the 45° hatch keeps one direction.
+- `app/pages/Now.tsx`:
+  - Left: four capacity rows (fitness bar + hatched fatigue bar, no numbers) with the body map beside them,
+    or under them on a phone.
+  - Right: a table of Fitness, 28d change and Recovered weekday (or `—`).
+  - Bottom: the last 7 days of session chips, with a Load / Duration tooltip.
+  - Hovering a row, a map region or a right-column row highlights the same capacity in all three.
+- `CapacityRow` got a `showFigure` option, so the numbers aren't shown twice.
+- Checked in the browser:
+  - Engine is very heavy (until Wed), Legs heavy (until Fri), Speed and Pull light (`—`). The map regions match.
+  - Hover links work both ways, and the football chip tooltip reads Load 124 / 61 min.
+  - 390 px with no horizontal scroll. The build passes.
+- DESIGN.md §7.3: added the P0 region mapping (chest = Engine, core = Speed).
+
+**What I changed and why:** _(to fill in)_

@@ -46,6 +46,7 @@
 
 /* Capacity row (§7.2) */
 .cap-row { display: grid; grid-template-columns: 96px 1fr 104px; align-items: center; gap: var(--s4); padding: var(--s3) 0; border-radius: var(--r-control); }
+.cap-row.no-fig { grid-template-columns: 96px 1fr; }
 .cap-row.is-hl .cap-name { text-decoration: underline; text-underline-offset: 4px; }
 .cap-bars { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .bar-track { position: relative; height: 12px; }
