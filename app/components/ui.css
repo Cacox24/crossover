@@ -58,3 +58,9 @@
 .bar-proj { position: absolute; top: 0; height: 100%; border: 1.5px dashed var(--black); border-left: none; border-radius: 0 var(--r-mark) var(--r-mark) 0; }
 .cap-fig { display: flex; align-items: baseline; justify-content: flex-end; gap: var(--s2); }
 @media (max-width: 520px) { .cap-row { grid-template-columns: 72px 1fr 88px; gap: var(--s2); } }
+
+/* Chips row + segmented control */
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.seg { display: inline-flex; border: 1px solid var(--grey-4); border-radius: var(--r-control); background: var(--white); padding: 2px; }
+.seg button { border: 0; background: none; height: 30px; padding: 0 var(--s3); border-radius: 6px; cursor: pointer; color: var(--grey-1); }
+.seg button.is-selected { background: var(--black); color: var(--white); }

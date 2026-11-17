@@ -8,6 +8,7 @@ import { NowPage } from "./pages/Now";
 import { ProgressionPage } from "./pages/Progression";
 import { MixPage } from "./pages/Mix";
 import { KitPage } from "./pages/Kit";
+import { WhatIfDrawer } from "./drawers/WhatIf";
 import "./shell.css";
 
 const ROUTES = { now: "Now", progression: "Progression", mix: "Mix" } as const;
@@ -60,12 +61,12 @@ export function App() {
         </div>
         {body}
       </main>
-      {whatIf && <Drawer title="What if" onClose={() => setWhatIf(false)}>{DASH}</Drawer>}
+      {whatIf && state.status === "ready" && <Drawer title="What if" onClose={() => setWhatIf(false)}><WhatIfDrawer /></Drawer>}
     </>
   );
 }
 
-/** §7.5 right-side drawer, 420px. Contents arrive in the What if block. */
+/** §7.5 right-side drawer, 420px. */
 export function Drawer({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();

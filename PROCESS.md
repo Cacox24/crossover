@@ -181,3 +181,27 @@ acceptance was updated to match.
 - DESIGN.md §7.3: added the P0 region mapping (chest = Engine, core = Speed).
 
 **What I changed and why:** _(to fill in)_
+
+## 2026-11-17 12:50 Block 6: What if drawer
+
+**Asked:** build the What if drawer (BUILD_PLAN §5.4, DESIGN.md §7.5).
+
+**Produced:**
+- `app/drawers/WhatIf.tsx`, opened from the top bar's `What if` button. The only action is `Close` (Escape also closes it).
+  - Inputs: five sport glyph chips; `Tonight · Tomorrow` plus a date picker limited to the 7-day window;
+    `Easy · Normal · Hard`.
+  - Output 1: capacity rows on the chosen day. The current fatigue is drawn hatched, and the projected fatigue and fitness gain
+    as dashed outlines (§3.5). Each row shows its recovery weekday with the session added, or `—`.
+  - Output 2: fitness gain per capacity, and per sport via W.
+  - Output 3: learned effects for the chosen sport, `glyph → glyph  +28 s/km  1d  ●●○ 12`. The engine only
+    returns effects with n ≥ 3.
+- The numbers come straight from `engine/whatif.ts` (`whatIf`, plus `fatStep` from `engine/state.ts`). No formula is
+  repeated in the UI.
+- `CapacityRow` got `projectedFitIndex` and `aside`. The segmented control and chip styles moved to the shared CSS.
+- Checked in the browser:
+  - Football tonight, normal: Engine recovers Thu (instead of Wed), Legs Sat (instead of Fri).
+  - Running hard tomorrow shows the run → run effect.
+  - Changing an input updates the drawer in 11 ms including the re-render (target < 50 ms).
+  - 390 px: the drawer fills the width with no overflow. Tests and build pass.
+
+**What I changed and why:** _(to fill in)_

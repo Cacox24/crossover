@@ -1,4 +1,5 @@
 // DESIGN.md §7.2: fitness bar (black or split by sport) over a hatched fatigue bar.
+import type { ReactNode } from "react";
 import type { Capacity, SessionSport } from "../../engine/types";
 import { CAPACITY_NAME, SOURCE_ORDER, SPORT_META } from "../sports";
 import { fatigueBackground, FATIGUE_NAME } from "./fatigue";
@@ -20,6 +21,8 @@ export interface CapacityRowProps {
   projectedFatStep?: number;
   highlighted?: boolean;
   showFigure?: boolean;                                // default true
+  projectedFitIndex?: number;                          // §3.5 dashed outline on the fitness bar
+  aside?: ReactNode;                                   // replaces the figure
   onHover?: (on: boolean) => void;
 }
 
@@ -40,6 +43,9 @@ export function CapacityRow(p: CapacityRowProps) {
               <div key={s.k} className="bar-seg" style={{ flexGrow: s.w, background: s.k === "total" ? "var(--black)" : SPORT_META[s.k].color }} />
             ))}
           </div>
+          {p.projectedFitIndex !== undefined && p.projectedFitIndex > fit && (
+            <div className="bar-proj" style={{ left: `${fit}%`, width: `${Math.min(100, p.projectedFitIndex) - fit}%` }} />
+          )}
         </div>
         <div className="bar-track fat" role="img" aria-label={`${CAPACITY_NAME[p.capacity]} fatigue ${FATIGUE_NAME[p.fatStep]}`}>
           <div className="bar-fat" style={{ width: `${fatW}%`, background: fatigueBackground(p.fatStep) }} />
@@ -48,7 +54,7 @@ export function CapacityRow(p: CapacityRowProps) {
           )}
         </div>
       </div>
-      {p.showFigure !== false && (
+      {p.aside !== undefined ? <span className="cap-fig">{p.aside}</span> : p.showFigure !== false && (
         <span className="cap-fig">
           <span className="t-fig-m">{fit}</span>
           {p.fitChange !== undefined && <Change value={p.fitChange * 100} unit="%" />}

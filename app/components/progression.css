@@ -20,10 +20,6 @@
 
 /* Page */
 .prog-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
-.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.seg { display: inline-flex; border: 1px solid var(--grey-4); border-radius: var(--r-control); background: var(--white); padding: 2px; }
-.seg button { border: 0; background: none; height: 30px; padding: 0 var(--s3); border-radius: 6px; cursor: pointer; color: var(--grey-1); }
-.seg button.is-selected { background: var(--black); color: var(--white); }
 .stat { display: flex; flex-direction: column; gap: var(--s1); padding-bottom: var(--s4); margin-bottom: var(--s4); border-bottom: 1px solid var(--grey-4); }
 .stat:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 .split-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: var(--s2); padding: 6px 0; }
