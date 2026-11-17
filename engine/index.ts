@@ -4,7 +4,7 @@ import { CAPACITIES, SPORTS, SOURCES, zeroVec } from "./types";
 import { computeLoads, isHrSport, type LoadMethod } from "./load";
 import { splitSessions, meanGymShares } from "./split";
 import { simulate, fitTotal, trailingMax, fatigueRefs, fatStep, recoveredOn } from "./state";
-import { wRow, modelRefs, contribution, runPoints, rollingMedian, calibrate } from "./progression";
+import { wRow, modelRefs, contribution, runPoints, rollingMedian, calibrate, type Calibration } from "./progression";
 import { attributeDelta, type Delta } from "./attribution";
 import { shortTermEffects, longTermEffects, type Effect } from "./effects";
 import type { WhatIfContext } from "./whatif";
@@ -26,7 +26,7 @@ export interface DataJson {
     model: { start: string; values: number[] };                       // daily, 0–1 (×100 = index)
     contributions: Partial<Record<SessionSport, number[]>>;           // daily, same dates, sum = model
     metric: null | { name: string; unit: string; points: [string, number][]; series: [string, number][] };
-    calibration: null | { n: number; a: number; b: number; r2: number; calibrated: boolean; evidence: number };
+    calibration: Calibration | null;
     evidence: number;
     delta12w: Delta;
   }>;

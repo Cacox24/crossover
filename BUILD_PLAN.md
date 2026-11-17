@@ -205,7 +205,9 @@ Per sport:
 - Football, tennis: modelled fitness index only, evidence `●○○`
 
 Acceptance:
-- [ ] Running chart shows real pace @150 with contributions summing to the modelled line
+- [x] Running chart shows real pace @150 with contributions summing to the modelled line, when calibrated
+  (R² ≥ 0.3). Otherwise it shows modelled fitness (0–100), with real pace as numbers in the right column.
+  Real data, 17 Nov: R² 0.07 → modelled view (decided 17 Nov).
 - [ ] Animation: line draws first, then layers fill by sport order, 600ms total
 - [ ] Reduced motion → no animation
 - [ ] Right column numbers sum to the total (rounding goes to own sport)

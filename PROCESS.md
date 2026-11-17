@@ -128,3 +128,32 @@ it just no longer defines the "typical session". New test, 8 of 8 tests pass.
 **Design decision added to DESIGN.md §7.2:** the fatigue bar length is FatNorm ÷ 3, capped, so a full bar = overloaded.
 
 **What I changed and why:** _(to fill in)_
+
+## 2026-11-17 12:10 Block 4: Progression page
+
+**Asked:** build the Progression page (BUILD_PLAN §5.2, DESIGN.md §7.4): the boost-stacked chart, its animation and the right column.
+
+**Produced:**
+- `app/components/ProgressionChart.tsx`: hand-written SVG with `d3-shape` (from the §2 list).
+  - Contributions are stacked in sport colors with the own sport first and Other last, and a 2 px black line on top.
+  - Other sports' sessions show as glyph markers in lanes under the x-axis.
+  - Crosshair and a numbers-only tooltip. The chart has one y-axis.
+  - Animation: the line draws in 240 ms, then the layers fill up from the bottom, staggered in sport order, all within 600 ms. Switching sport or range replays it, and with reduced motion it's instant.
+- `app/pages/Progression.tsx`:
+  - Five sport chips and a `12w · 6m · 1y` range switch.
+  - Table toggle with one row per week.
+  - Right column: Pace @150 with its change (running), Fitness, the change split by sport, and evidence.
+  - The split for the chosen range is computed in the browser with the engine's own `attributeDelta`, so it isn't a second copy of the formula. The split rows add up to the total.
+- Two chart modes, picked automatically:
+  - **Calibrated** (R² ≥ 0.3): the y-axis is pace in s/km, flipped so faster is up. The stack is a + b × contributions and the line is the measured pace. Checked with the fixture (R² 0.48).
+  - **Not calibrated:** the y-axis is modelled fitness from 0 to 100, and the line is the model total. Measured pace moves to the right column.
+- Checked in the browser on real and fixture data: 12w, 1y, football, table view, 390 px width with no horizontal
+  scroll, no console errors. The tests and the build pass.
+
+**Open issue:** with real data, running isn't calibrated (R² 0.07, and b has the wrong sign), so the
+chart shows modelled fitness rather than the real pace @150. BUILD_PLAN's acceptance line "Running chart
+shows real pace @150" isn't met by the real data. Real pace is shown as numbers only.
+
+**What I changed and why:** kept the modelled view for running. A pace chart claiming a link that the data
+doesn't support (R² 0.07) would be dishonest. Showing the weak evidence is part of the pitch. BUILD_PLAN §5.2
+acceptance was updated to match.

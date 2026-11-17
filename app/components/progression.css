@@ -1,0 +1,29 @@
+.pchart { position: relative; width: 100%; }
+.pchart svg { display: block; overflow: visible; }
+.pchart .grid { stroke: var(--grey-4); stroke-width: 1; }
+.pchart .axis { stroke: var(--grey-3); stroke-width: 1; }
+.pchart .tick { fill: var(--grey-2); font-size: 12px; font-weight: 450; font-stretch: 87%; font-variant-numeric: tabular-nums; }
+.pchart .measured { fill: none; stroke: var(--black); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-line 240ms ease-out forwards; }
+.pchart .layer { clip-path: inset(100% 0 0 0); animation: fill-up 120ms ease-out forwards; }
+.pchart .crosshair { stroke: var(--grey-3); stroke-width: 1; }
+.pchart .hover-dot { fill: var(--white); stroke: var(--black); stroke-width: 2; }
+.tt-row { display: flex; align-items: center; gap: 6px; }
+
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+@keyframes fill-up { to { clip-path: inset(0 0 0 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pchart .measured { animation: none; stroke-dashoffset: 0; stroke-dasharray: none; }
+  .pchart .layer { animation: none; clip-path: none; }
+}
+
+/* Page */
+.prog-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.seg { display: inline-flex; border: 1px solid var(--grey-4); border-radius: var(--r-control); background: var(--white); padding: 2px; }
+.seg button { border: 0; background: none; height: 30px; padding: 0 var(--s3); border-radius: 6px; cursor: pointer; color: var(--grey-1); }
+.seg button.is-selected { background: var(--black); color: var(--white); }
+.stat { display: flex; flex-direction: column; gap: var(--s1); padding-bottom: var(--s4); margin-bottom: var(--s4); border-bottom: 1px solid var(--grey-4); }
+.stat:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.split-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: var(--s2); padding: 6px 0; }
