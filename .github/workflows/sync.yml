@@ -1,0 +1,46 @@
+# Pulls Garmin + Fitbit, rebuilds public/data.json, commits it. Vercel redeploys on the push.
+# Started by the Sync button (api/sync.ts) and once every morning.
+# Repo secrets: GARMIN_PERSONAL_API_KEY, GOOGLE_CLIENT_SECRET_JSON, GOOGLE_TOKEN_JSON (contents of the files in secrets/).
+name: Sync
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
+permissions:
+  contents: write
+concurrency:
+  group: sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Write secrets (never printed)
+        env:
+          GARMIN_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+          GOOGLE_CLIENT_SECRET_JSON: ${{ secrets.GOOGLE_CLIENT_SECRET_JSON }}
+          GOOGLE_TOKEN_JSON: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: |
+          mkdir -p secrets
+          printf '%s' "$GOOGLE_CLIENT_SECRET_JSON" > secrets/client_secret.json
+          printf '%s' "$GOOGLE_TOKEN_JSON" > secrets/google_token.json
+          printf 'GARMIN_PERSONAL_API_KEY=%s\nGARMIN_BASE_URL=https://personal.connectapi.garmin.com\nGOOGLE_CLIENT_SECRET_FILE=secrets/client_secret.json\n' "$GARMIN_KEY" > .env
+      - run: npm run sync
+      - name: Commit data
+        run: |
+          git config user.name "crossover-sync"
+          git config user.email "crossover-sync@users.noreply.github.com"
+          git add public/data.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Sync data"
+          git push
+      - name: Clean up secrets
+        if: always()
+        run: rm -rf secrets .env raw data

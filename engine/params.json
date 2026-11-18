@@ -30,6 +30,7 @@
   },
   "dedupe_min_overlap": 0.5,
   "gym_weights_reliable": false,
+  "include_other": false,
   "default_rpe": {
     "gym": 6,
     "bouldering": 6,

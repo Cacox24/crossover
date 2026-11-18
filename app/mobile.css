@@ -1,0 +1,55 @@
+/* Phone layout (≤ 640px). Loaded last so it wins over page styles. Pages stack, nothing scrolls sideways. */
+@media (max-width: 640px) {
+  html:root { --gutter: 16px; --main-pad: 32px; }
+  .main { padding-top: 16px !important; padding-bottom: 32px !important; }
+  .topbar-inner { gap: 8px; }
+  .nav-link { padding: 8px 12px; font-size: 14px; }
+
+  /* Shared cards */
+  .card, .kn { border-radius: 24px; padding: 20px 20px; }
+  .hero { padding: 20px 18px 16px; border-radius: 26px; }
+  .hero-num { font-size: 64px !important; line-height: 1 !important; }
+  .hero-head { flex-direction: column; gap: 14px; }
+  .hero-side { align-items: flex-start !important; text-align: left !important; flex-direction: row !important; gap: 10px; align-items: baseline !important; }
+  .hero-side-num { font-size: 26px !important; }
+  .chart-wrap { min-height: 220px; height: 220px; flex: none !important; }
+  .sport-tabs { overflow-x: auto; scrollbar-width: none; max-width: 100%; flex-wrap: nowrap; }
+  .sport-tabs::-webkit-scrollbar { display: none; }
+  .sport-tab { flex: none; }
+  .prog, .nowx, .goalsp { height: auto !important; min-height: 0 !important; }
+  .prog-body { grid-template-columns: 1fr !important; }
+  .card-side { grid-template-columns: 1fr 1fr !important; }
+  .kn-num { font-size: 30px !important; }
+
+  /* Now: readiness rows become two lines: sport + %, then the 7-day strip + suggested day */
+  .nowx { grid-template-columns: 1fr !important; }
+  .nrd { padding: 18px 16px 8px !important; }
+  .nrd-headrow { display: block !important; padding-bottom: 4px; }
+  .nrd-headrow > :not(:first-child) { display: none !important; }
+  .nrd-row { grid-template-columns: 1fr auto !important; grid-template-areas: "sport pct" "days next"; row-gap: 10px; padding: 14px 0; }
+  .nrd-row .nrd-sport { grid-area: sport; font-size: 16px; }
+  .nrd-row .nrd-pct { grid-area: pct; font-size: 30px !important; }
+  .nrd-row .nrd-last { display: none; }
+  .nrd-row .nrd-days { grid-area: days; gap: 4px; }
+  .nrd-row .nrd-days > i { height: 18px !important; border-radius: 6px; }
+  .nrd-row .nrd-next { grid-area: next; align-self: center; }
+  .nrd-sug { font-size: 13px; }
+  .ns-num { font-size: 26px !important; }
+  .nt-grid { grid-template-rows: auto auto !important; }
+  .nt.card { padding: 16px 8px; }
+
+  /* Goals: day strip as one row of 11 small days */
+  .goalsp .prog-body { grid-template-columns: 1fr !important; }
+  .goalsp .g-strip { order: -1; display: grid !important; grid-template-columns: repeat(11, 1fr); gap: 2px; padding: 8px 6px !important; }
+  .goalsp .gs { padding: 6px 0; border-radius: 10px; }
+  .goalsp .gs-date { font-size: 12px; }
+  .goalsp .gs-date small { display: none; }
+  .goalsp .gs-ic .glyph, .goalsp .gs-ic svg { width: 14px; height: 14px; }
+  .g-next-list li { grid-template-columns: 96px 1fr; padding: 10px 0; max-height: none; }
+  .goalsp .g-tiles .kn { min-height: 120px; }
+  .gh li { grid-template-columns: 76px 1fr 64px; gap: 10px; }
+  .gh-val { font-size: 16px; }
+
+  /* Sources popover fits the screen */
+  .sources-pop { right: -8px; width: min(340px, calc(100vw - 24px)); }
+}

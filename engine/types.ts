@@ -18,7 +18,7 @@ export interface Session {
   avgHr?: number;
   maxHr?: number;
   hrSamples?: [number, number][];   // [secondsFromStart, bpm]
-  distanceM?: number;               // running only
+  distanceM?: number;               // running, football, tennis
   elevGainM?: number;               // running only
   sets?: GymSet[];                  // gym only
   rpe?: number;

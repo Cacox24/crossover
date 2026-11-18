@@ -2,22 +2,24 @@
 .unit { color: var(--grey-1); }
 
 /* Panel (§5) */
-.panel { background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-panel); padding: var(--s5); min-width: 0; }
+.panel { min-width: 0; }
 .panel-title { margin-bottom: var(--s4); }
 .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s4); }
 
 /* Glyph + chip */
 .glyph { flex: none; display: block; }
 .chip {
-  display: inline-flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s3);
-  background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-control); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px 0 14px;
+  background: var(--white); border: 1px solid var(--grey-4); border-radius: 999px; cursor: pointer; color: var(--grey-1);
+  transition: border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
 }
-.chip:hover { border-color: var(--grey-3); }
-.chip.is-selected { border-color: var(--black); box-shadow: inset 0 0 0 1px var(--black); }
+.chip:hover { border-color: var(--grey-3); color: var(--black); }
+.chip.is-selected { border-color: var(--black); color: var(--black); box-shadow: inset 0 0 0 1px var(--black); }
 
 .icon-btn {
   display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
-  background: none; border: 1px solid transparent; border-radius: var(--r-control); cursor: pointer; color: var(--grey-1);
+  background: none; border: 1px solid transparent; border-radius: 999px; cursor: pointer; color: var(--grey-2);
+  transition: border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
 }
 .icon-btn:hover { border-color: var(--grey-4); color: var(--black); }
 
@@ -34,8 +36,9 @@
 .tooltip {
   position: absolute; pointer-events: none; z-index: 10; transform: translate(12px, -50%);
   background: var(--white); border: 1px solid var(--grey-4); border-radius: var(--r-control);
-  box-shadow: var(--shadow-float); padding: var(--s2) var(--s3); white-space: nowrap;
+  box-shadow: var(--shadow-float); padding: 10px 12px; white-space: nowrap; animation: tip-in var(--t-fast) var(--ease-out) both;
 }
+@keyframes tip-in { from { opacity: 0; } }
 
 /* Table view (§8) */
 .table-wrap { overflow-x: auto; }
@@ -61,6 +64,7 @@
 
 /* Chips row + segmented control */
 .chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.seg { display: inline-flex; border: 1px solid var(--grey-4); border-radius: var(--r-control); background: var(--white); padding: 2px; }
-.seg button { border: 0; background: none; height: 30px; padding: 0 var(--s3); border-radius: 6px; cursor: pointer; color: var(--grey-1); }
-.seg button.is-selected { background: var(--black); color: var(--white); }
+.seg { display: inline-flex; border-radius: 999px; background: var(--wash); padding: 3px; }
+.seg button { border: 0; background: none; height: 34px; padding: 0 16px; border-radius: 999px; cursor: pointer; color: var(--grey-1); transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out); }
+.seg button:hover { color: var(--black); }
+.seg button.is-selected { background: var(--white); color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 0 0 1px var(--grey-4); }

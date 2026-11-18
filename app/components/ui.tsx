@@ -17,7 +17,7 @@ export function Panel({ title, children, className = "", style }: { title?: stri
 
 export function SportGlyph({ sport, size = 20 }: { sport: SessionSport; size?: number }) {
   const { Icon, color, name } = SPORT_META[sport];
-  return <Icon className="glyph" size={size} color={color} weight="fill" aria-label={name} role="img" />;
+  return <Icon className="glyph" size={size} color={color} weight="regular" aria-label={name} role="img" />;
 }
 
 export function SportChip({ sport, selected, onClick, showName = true }: { sport: SessionSport; selected?: boolean; onClick?: () => void; showName?: boolean }) {

@@ -44,6 +44,7 @@ for (const a of garmin) {
     avgHr: a.averageHR, maxHr: a.maxHR,
   };
   if (m.sport === "running") { s.distanceM = a.distanceM && Math.round(a.distanceM); s.elevGainM = a.elevGainM; }
+  if ((m.sport === "football" || m.sport === "tennis") && a.distanceM) s.distanceM = Math.round(a.distanceM);
   if (m.sport === "gym") s.sets = gymSets(a);
   garminSessions.push({ session: s, startMs: a.beginTimestamp, endMs: a.beginTimestamp + (a.elapsedS ?? a.durationS) * 1000 });
 }
@@ -84,7 +85,7 @@ for (const p of exercise) {
     maxHr: samples.length ? Math.max(...samples.map(([, b]) => b)) : undefined,
     hrSamples: samples.length ? samples : undefined,
   };
-  if (m.sport === "running") {
+  if (m.sport === "running" || m.sport === "football" || m.sport === "tennis") {
     const mm = Number(e.metricsSummary?.distanceMillimeters);
     if (mm) s.distanceM = Math.round(mm / 1000);
   }

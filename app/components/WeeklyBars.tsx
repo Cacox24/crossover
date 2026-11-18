@@ -10,7 +10,7 @@ import { SportGlyph, Tooltip } from "./ui";
 
 export interface Week { start: string; loadBySport: Partial<Record<SessionSport, number>>; countBySport: Partial<Record<SessionSport, number>> }
 
-const H = 300, M = { top: 12, right: 8, bottom: 28, left: 44 }, GAP = 2, R = 4;
+const H = 340, M = { top: 12, right: 8, bottom: 28, left: 44 }, GAP = 2, R = 4;
 
 const total = (w: Week) => SOURCE_ORDER.reduce((a, k) => a + (w.loadBySport[k] ?? 0), 0);
 
@@ -49,7 +49,7 @@ export function WeeklyBars({ weeks }: { weeks: Week[] }) {
                 const d = last
                   ? `M${x},${yb} L${x},${yt + r} Q${x},${yt} ${x + r},${yt} L${x + bw - r},${yt} Q${x + bw},${yt} ${x + bw},${yt + r} L${x + bw},${yb} Z`
                   : `M${x},${yb} L${x},${yt} L${x + bw},${yt} L${x + bw},${yb} Z`;
-                return <path key={k} d={d} fill={SPORT_META[k].color} />;
+                return <path key={k} d={d} className="bar" style={{ animationDelay: `${150 + i * 40}ms` }} fill={k === "other" ? "var(--grey-3)" : SPORT_META[k].color} />;
               })}
             </g>
           );

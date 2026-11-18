@@ -6,3 +6,11 @@ dist/
 .DS_Store
 data/
 Claude outputs/
+
+# local scratch, never commit
+*.v2.md
+/*.jpg
+/*.jpeg
+/*.psd
+/Fitbit.png
+/Garmin.png

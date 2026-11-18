@@ -23,10 +23,11 @@ const NEUTRAL_SIDE = ["M42,208 L52,208 Q53,222 50,232 Q44,236 41,228 Z", "M82,37
 const mirrorPath = (d: string) => d.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x, y) => `${200 - Number(x)},${y}`);
 const both = (ds: string[]) => [...ds, ...ds.map(mirrorPath)];
 
-export function BodyMap({ steps, highlighted, onHover }: {
+export function BodyMap({ steps, highlighted, onHover, fill = fatigueFill }: {
   steps: Record<Capacity, number>;
   highlighted: Capacity | null;
   onHover: (c: Capacity | null) => void;
+  fill?: (step: number) => string;
 }) {
   return (
     <svg viewBox="0 0 200 396" className="bodymap" role="img" aria-label="Body map">
@@ -36,7 +37,7 @@ export function BodyMap({ steps, highlighted, onHover }: {
         {both(NEUTRAL_SIDE).map((d, i) => <path key={i} d={d} />)}
       </g>
       {(Object.keys(SIDE) as Capacity[]).map((c) => (
-        <g key={c} className={`region ${highlighted === c ? "is-hl" : ""}`} fill={fatigueFill(steps[c])}
+        <g key={c} className={`region ${highlighted === c ? "is-hl" : ""}`} fill={fill(steps[c])}
           onPointerEnter={() => onHover(c)} onPointerLeave={() => onHover(null)}
           tabIndex={0} onFocus={() => onHover(c)} onBlur={() => onHover(null)}
           aria-label={`${CAPACITY_NAME[c]} ${FATIGUE_NAME[steps[c]]}`}>

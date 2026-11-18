@@ -32,15 +32,20 @@ export interface DataJson {
   }>;
   effects: Effect[];
   weeks: { start: string; loadBySport: Partial<Record<SessionSport, number>>; countBySport: Partial<Record<SessionSport, number>> }[];
-  sessions: { id: string; sport: SessionSport; otherKind?: string; start: string; day: string; durationMin: number; load: number; method: LoadMethod; avgHrOnly?: boolean }[];
+  sessions: { id: string; sport: SessionSport; otherKind?: string; start: string; day: string; durationMin: number; load: number; method: LoadMethod; avgHrOnly?: boolean; km?: number; regions?: Partial<Record<GymRegion, number>> }[];
   whatif: WhatIfContext;
   params: Params;
+  nights: Night[];
+  generatedAt?: string;
+  climbs?: Record<string, Record<string, number>>;                 // day → { "V3": 4, ... } from climbs.json (added by sync/build.ts)                                             // set by sync/build.ts                                                  // last 60 days: sleep, HRV, resting HR
 }
 
 const r4 = (x: number) => round(x, 4);
 
 export function runEngine({ sessions: raw, nights, hrMax, tz, today, params: p }: EngineInput): DataJson {
-  const { sessions: all, c, cFitted } = computeLoads(raw, nights, hrMax, tz, p);
+  // Other (cycling, hiking, swimming, court games…) can be switched off entirely: no load, no fatigue, no fitness.
+  const kept = p.include_other ? raw : raw.filter((s) => s.sport !== "other");
+  const { sessions: all, c, cFitted } = computeLoads(kept, nights, hrMax, tz, p);
   const sessions = all.filter((s) => s.day <= today);
   const splits = splitSessions(sessions, p);
   const first = sessions.reduce((m, s) => (s.day < m ? s.day : m), today);
@@ -143,8 +148,23 @@ export function runEngine({ sessions: raw, nights, hrMax, tz, today, params: p }
     // Opaque ids: device activity ids aren't needed by the app and don't belong in a public file.
     sessions: sessions.filter((s) => dayDiff(s.day, today) < 365).map((s, i) => ({
       id: `s${i}`, sport: s.sport, ...(s.otherKind ? { otherKind: s.otherKind } : {}), start: s.start, day: s.day,
-      durationMin: s.durationMin, load: round(s.load, 1), method: s.method, ...(s.hrFromAvg && s.method === "trimp" ? { avgHrOnly: true } : {}),
+      durationMin: s.durationMin, load: round(s.load, 1), method: s.method, ...(s.distanceM ? { km: round(s.distanceM / 1000, 2) } : {}), ...(s.sets?.length ? { regions: gymRegions(s.sets) } : {}), ...(s.hrFromAvg && s.method === "trimp" ? { avgHrOnly: true } : {}),
     })),
     whatif, params: p,
+    nights: nights.filter((n) => n.date > addDays(today, -60) && n.date <= today)
+      .map((n) => ({ date: n.date, sleepH: n.sleepH, rmssd: n.rmssd, rhr: n.rhr })),
   };
+}
+
+/** Gym sets grouped by body region (Garmin exercise categories). Unlabelled sets are counted as "other". */
+export type GymRegion = "chest" | "back" | "shoulders" | "arms" | "legs" | "core" | "other";
+const REGION_OF: [RegExp, GymRegion][] = [
+  [/BENCH_PRESS|PUSH_UP|FLYE|CHEST/, "chest"], [/PULL_UP|ROW|LAT_PULLDOWN|SHRUG|DEADLIFT|BACK_EXTENSION/, "back"],
+  [/SHOULDER_PRESS|LATERAL_RAISE|FRONT_RAISE|REAR_DELT/, "shoulders"], [/CURL|TRICEPS/, "arms"],
+  [/SQUAT|LUNGE|LEG_|CALF|OLYMPIC_LIFT|HIP_|GLUTE/, "legs"], [/SIT_UP|CRUNCH|PLANK|CORE|AB_/, "core"],
+];
+export function gymRegions(sets: { exercise: string }[]) {
+  const out: Partial<Record<GymRegion, number>> = {};
+  for (const x of sets) { const r = REGION_OF.find(([re]) => re.test(x.exercise))?.[1] ?? "other"; out[r] = (out[r] ?? 0) + 1; }
+  return out;
 }

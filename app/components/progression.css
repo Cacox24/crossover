@@ -2,24 +2,50 @@
 .pchart svg { display: block; overflow: visible; }
 .pchart .grid { stroke: var(--grey-4); stroke-width: 1; }
 .pchart .axis { stroke: var(--grey-3); stroke-width: 1; }
+.pchart .lane { stroke: var(--grey-4); stroke-width: 1; stroke-dasharray: 1 3; }
 .pchart .tick { fill: var(--grey-2); font-size: 12px; font-weight: 450; font-stretch: 87%; font-variant-numeric: tabular-nums; }
 .pchart .measured { fill: none; stroke: var(--black); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
-  stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-line 240ms ease-out forwards; }
-.pchart .layer { clip-path: inset(100% 0 0 0); animation: fill-up 120ms ease-out forwards; }
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-line var(--t-slow) var(--ease-out) 120ms forwards; }
+.pchart .layer { opacity: 0; transform: translateY(6px); animation: layer-in 900ms var(--ease-out) forwards; }
+.pchart .end-label { opacity: 0; animation: fade-drift var(--t-med) var(--ease-out) forwards; }
+.pchart .end-name { font-size: 13px; font-weight: 500; fill: var(--black); }
+.pchart .end-val { font-size: 13px; font-weight: 600; font-stretch: 87%; font-variant-numeric: tabular-nums; fill: var(--black); }
 .pchart .crosshair { stroke: var(--grey-3); stroke-width: 1; }
 .pchart .hover-dot { fill: var(--white); stroke: var(--black); stroke-width: 2; }
-.tt-row { display: flex; align-items: center; gap: 6px; }
+.tt-row { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 8px; min-width: 160px; }
+.tt-val { text-align: right; }
 
 @keyframes draw-line { to { stroke-dashoffset: 0; } }
-@keyframes fill-up { to { clip-path: inset(0 0 0 0); } }
+@keyframes layer-in { to { opacity: 1; transform: none; } }
+@keyframes fade-drift { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   .pchart .measured { animation: none; stroke-dashoffset: 0; stroke-dasharray: none; }
-  .pchart .layer { animation: none; clip-path: none; }
+  .pchart .layer, .pchart .end-label { animation: none; opacity: 1; transform: none; }
 }
 
 /* Page */
-.prog-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
-.stat { display: flex; flex-direction: column; gap: var(--s1); padding-bottom: var(--s4); margin-bottom: var(--s4); border-bottom: 1px solid var(--grey-4); }
-.stat:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
-.split-row { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: var(--s2); padding: 6px 0; }
+.prog-chips { margin: -32px 0 56px; }
+.numbers { display: flex; flex-direction: column; gap: 40px; }
+.num-block { display: flex; flex-direction: column; gap: 8px; }
+.num-block .t-eyebrow { margin-bottom: 2px; }
+.source-table { width: 100%; border-collapse: collapse; }
+.source-table th { text-align: right; font-weight: 450; color: var(--grey-2); padding: 0 0 10px; }
+.source-table th:first-child { text-align: left; }
+.source-table td { padding: 10px 0; border-top: 1px solid var(--grey-4); text-align: right; }
+.source-table td:first-child { text-align: left; }
+.source-table .src-name { display: inline-flex; align-items: center; gap: 10px; }
+.source-table .is-own td { font-weight: 600; }
+.share-mini { display: inline-block; width: 40px; height: 4px; background: var(--wash); border-radius: 2px; margin-right: 10px; vertical-align: middle; overflow: hidden; }
+.share-mini > span { display: block; height: 100%; }
+
+.prog-chips { margin: -8px 0 32px; }
+.chart-box { padding-bottom: 20px; }
+.stack-bar { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; }
+.stack-bar > span { display: block; flex-basis: 0; transform-origin: left; animation: grow-x var(--t-slow) var(--ease-out) 400ms both; }
+.source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.source-cell { background: var(--white); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.source-cell.is-own { box-shadow: inset 0 0 0 1.5px var(--black); }
+.src-name { display: inline-flex; align-items: center; gap: 8px; }
+.pchart .grid { stroke: #E6E6E6; }
+@keyframes grow-x { from { transform: scaleX(0); } }

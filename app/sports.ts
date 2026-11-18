@@ -1,11 +1,11 @@
-import { Sneaker, SoccerBall, TennisBall, Mountains, Barbell, DotsThreeCircle, type Icon } from "@phosphor-icons/react";
+import { PersonSimpleRun, SoccerBall, TennisBall, Mountains, Barbell, DotsThreeCircle, type Icon } from "@phosphor-icons/react";
 import type { Sport, SessionSport, Capacity } from "../engine/types";
 
 export const SPORT_ORDER: Sport[] = ["running", "football", "tennis", "bouldering", "gym"];
 export const SOURCE_ORDER: SessionSport[] = [...SPORT_ORDER, "other"];
 
 export const SPORT_META: Record<SessionSport, { name: string; color: string; Icon: Icon }> = {
-  running:    { name: "Running",    color: "var(--sport-run)",      Icon: Sneaker },
+  running:    { name: "Running",    color: "var(--sport-run)",      Icon: PersonSimpleRun },
   football:   { name: "Football",   color: "var(--sport-football)", Icon: SoccerBall },
   tennis:     { name: "Tennis",     color: "var(--sport-tennis)",   Icon: TennisBall },
   bouldering: { name: "Bouldering", color: "var(--sport-boulder)",  Icon: Mountains },

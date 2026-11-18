@@ -1,146 +1,166 @@
-// BUILD_PLAN §5.2 / DESIGN.md §7.4. Attribution for the selected range uses the engine's own function.
-import { useMemo, useState } from "react";
+// Progression: one sport at a time. A themed hero with a scrubbable line,
+// what built it (hover links to the chart), and four key numbers.
+import { useEffect, useMemo, useState } from "react";
+import { DarkPage } from "../components/DarkPage";
 import type { Sport, SessionSport } from "../../engine/types";
 import { SOURCES } from "../../engine/types";
-import { attributeDelta } from "../../engine/attribution";
-import { addDays } from "../../engine/time";
+import { addDays, dayDiff } from "../../engine/time";
 import { useData } from "../data";
 import { SPORT_ORDER, SPORT_META } from "../sports";
 import { dayMonth, pace, DASH } from "../format";
-import { ProgressionChart, type ChartSpec } from "../components/ProgressionChart";
-import { Panel, SportChip, SportGlyph, Figure, Change, Evidence, DataTable, TableToggle, type Column } from "../components/ui";
-import "../components/progression.css";
+import { LineChart, type Dot } from "../components/LineChart";
+import { SportGlyph } from "../components/ui";
+import "./progression-page.css";
 
-const RANGES = { "12w": 84, "6m": 182, "1y": 364 } as const;
+/** Whole page goes dark in the sport's colour. Set to false to go back to the light page. */
+const DARK_PAGE = true;
+
+const RANGES = { "1M": 30, "3M": 91, "6M": 182, "1Y": 364 } as const;
 type Range = keyof typeof RANGES;
+const RANGE_NAME: Record<Range, string> = { "1M": "Past month", "3M": "Past 3 months", "6M": "Past 6 months", "1Y": "Past year" };
+const FEW_SESSIONS = 3;
+
+/** Deep, quiet themes per sport. page = dark page background, bg = hero, tint = light page. */
+export const THEME: Record<Sport, { bg: string; page: string; accent: string; tint: string; mesh: [string, string, string, string] }> = {
+  running:    { bg: "#0E2A55", page: "#050E24", accent: "#8DB8FF", tint: "#F3F6FB", mesh: ["#1F5BFF", "#6A3DFF", "#00B8FF", "#0A2A8A"] },
+  football:   { bg: "#0C3D2E", page: "#03140F", accent: "#6FE3B0", tint: "#F2F8F5", mesh: ["#00A86B", "#00C7B7", "#5FD35A", "#08594A"] },
+  tennis:     { bg: "#3D300C", page: "#140F03", accent: "#F4C84E", tint: "#FAF8F1", mesh: ["#E8A300", "#FF6A1A", "#FFD23F", "#7A4A00"] },
+  bouldering: { bg: "#231B57", page: "#0A0720", accent: "#B3A8FF", tint: "#F5F4FB", mesh: ["#5B3BFF", "#A63BFF", "#2F6BFF", "#2A1478"] },
+  gym:        { bg: "#4A1631", page: "#16050E", accent: "#FF9FC6", tint: "#FBF4F7", mesh: ["#FF3D7F", "#A83BFF", "#FF7A4D", "#6A0F3A"] },
+};
 
 export function ProgressionPage() {
   const d = useData();
   const [sport, setSport] = useState<Sport>("running");
-  const [range, setRange] = useState<Range>("12w");
-  const [table, setTable] = useState(false);
+  const [range, setRange] = useState<Range>("1Y");
+  const [scrub, setScrub] = useState<number | null>(null);
+  const [focus, setFocus] = useState<SessionSport | null>(null);
   const S = d.sports[sport];
+  const T = THEME[sport];
 
-  const view = useMemo(() => {
+  useEffect(() => {
+    if (DARK_PAGE) return;
+    document.documentElement.style.setProperty("--page-tint", T.tint);
+    return () => { document.documentElement.style.removeProperty("--page-tint"); };
+  }, [T]);
+
+  const v = useMemo(() => {
     const all = S.model.values.map((_, i) => addDays(S.model.start, i));
     const from = Math.max(0, all.length - 1 - RANGES[range]);
     const days = all.slice(from);
-    const contrib = (k: SessionSport, i: number) => S.contributions[k]?.[from + i] ?? 0;
-    const order: SessionSport[] = [sport, ...SOURCES.filter((k) => k !== sport && k !== "other"), "other"];
-    const keys = order.filter((k) => S.contributions[k]?.slice(from).some((v) => v > 0));
-    const cal = S.calibration?.calibrated ? S.calibration : null;
-    const model = (i: number) => S.model.values[from + i];
-
-    let spec: ChartSpec;
-    const markers = d.sessions.filter((x) => x.sport !== "other" && x.sport !== sport && x.day >= days[0]).map((x) => ({ day: x.day, sport: x.sport as Sport }));
-    const markerSports = SPORT_ORDER.filter((s) => markers.some((m) => m.sport === s));
-    if (cal && S.metric) {
-      // Measured units: stack = a + b × Σ contributions; pace axis inverted (faster = up).
-      const line = S.metric.series.filter(([day]) => day >= days[0]);
-      const stackTop = days.map((_, i) => cal.a + cal.b * model(i));
-      const vals = [...line.map(([, v]) => v), ...stackTop, cal.a];
-      const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.08 || 5;
-      spec = {
-        days, base: cal.a, line, markers, markerSports,
-        layers: keys.map((k) => ({ key: k, values: days.map((_, i) => cal.b * contrib(k, i)) })),
-        yDomain: cal.b < 0 ? [hi + pad, lo - pad] : [lo - pad, hi + pad],
-        format: (v) => pace(v), lineLabel: "Pace @150",
-        layerValue: (k, i) => `${Math.round(cal.b * contrib(k, i))} s/km`,
-      };
-    } else {
-      spec = {
-        days, base: 0, markers, markerSports,
-        line: days.map((day, i) => [day, 100 * model(i)] as [string, number]),
-        layers: keys.map((k) => ({ key: k, values: days.map((_, i) => 100 * contrib(k, i)) })),
-        yDomain: [0, 100], format: (v) => String(Math.round(v)), lineLabel: "Fitness",
-        layerValue: (k, i) => (100 * contrib(k, i)).toFixed(1),
-      };
-    }
-
-    const at = (i: number) => Object.fromEntries(SOURCES.map((k) => [k, contrib(k, i)])) as Record<SessionSport, number>;
-    const delta = attributeDelta(sport, at(0), at(days.length - 1), cal, "s/km");
-    const series = S.metric?.series ?? [];
-    const lastPace = series.at(-1);
-    const startPace = [...series].reverse().find(([day]) => day <= days[0]) ?? series.find(([day]) => day >= days[0]);
-    return { spec, delta, keys, lastPace, startPace, days, contrib, model, cal };
+    const values = S.model.values.slice(from).map((x) => 100 * x);
+    const series = (k: SessionSport) => days.map((_, i) => 100 * (S.contributions[k]?.[from + i] ?? 0));
+    const keys = [sport, ...SOURCES.filter((k) => k !== sport)].filter((k) => S.contributions[k]?.slice(from).some((x) => x > 0.0005)) as SessionSport[];
+    const contrib = Object.fromEntries(keys.map((k) => [k, series(k)])) as Record<SessionSport, number[]>;
+    const inRange = d.sessions.filter((s) => s.day >= days[0]);
+    const own = inRange.filter((s) => s.sport === sport);
+    return { days, values, contrib, keys, inRange, own };
   }, [S, sport, range, d.sessions]);
 
-  type Row = { i: number };
-  const rows: Row[] = view.days.map((_, i) => ({ i })).filter(({ i }) => (view.days.length - 1 - i) % 7 === 0);
-  const columns: Column<Row>[] = [
-    { key: "d", label: "Week", render: (r) => dayMonth(view.days[r.i]) },
-    { key: "m", label: view.spec.lineLabel, numeric: true, render: (r) => {
-      const pt = [...view.spec.line].reverse().find(([day]) => day <= view.days[r.i]);
-      return pt ? view.spec.format(pt[1]) : DASH;
-    } },
-    ...view.keys.map((k): Column<Row> => ({ key: k, label: SPORT_META[k].name, numeric: true, render: (r) => view.spec.layerValue(k, r.i) })),
-  ];
+  const last = v.values.length - 1;
+  const i = scrub ?? last;
+  const total = v.keys.reduce((a, k) => a + v.contrib[k][last], 0);
+  const parts = v.keys.map((k) => ({ k, now: v.contrib[k][last], at: v.contrib[k][i] })).filter((p) => total > 0 && p.now / total >= 0.005);
+  const change = v.values[last] - v.values[0];
 
-  const unitDigits = view.delta.unit === "%" ? 1 : 0;
-  const deltaOrder: SessionSport[] = [sport, ...SOURCES.filter((k) => k !== sport)];
+  // Peak marker (and name it when it was a long run, i.e. the marathon).
+  const peakI = v.values.indexOf(Math.max(...v.values));
+  const peakDay = v.days[peakI];
+  const longRun = sport === "running" && v.own.some((s) => Math.abs(dayDiff(s.day, peakDay)) <= 1 && s.durationMin >= 180);
+  const peakLabel = `${longRun ? "Marathon · " : "Peak · "}${Math.round(v.values[peakI])}`;
+
+  // Session dots only for the sport hovered in "Built by".
+  const dotSport = focus && focus !== sport ? focus : null;
+  const dayIdx = new Map(v.days.map((x, k) => [x, k]));
+  const dots: Dot[] = dotSport ? v.inRange.filter((s) => s.sport === dotSport && dayIdx.has(s.day)).map((s) => ({ i: dayIdx.get(s.day)!, color: SPORT_META[dotSport].color, strong: !!focus })) : [];
+
+  const few = v.own.length < FEW_SESSIONS;
+  const series = S.metric?.series ?? [];
+  const paceNow = series.at(-1);
+  const paceStart = [...series].reverse().find(([day]) => day <= v.days[0]) ?? series[0];
+  const lastSession = v.own.at(-1);
+  const hours = v.own.reduce((a, s) => a + s.durationMin, 0) / 60;
+  const perWeek = v.own.length / (RANGES[range] / 7);
 
   return (
-    <>
-      <h1 className="t-title page-title">Progression</h1>
-      <div className="prog-controls">
-        <div className="chips" role="group" aria-label="Sport">
-          {SPORT_ORDER.map((s) => <SportChip key={s} sport={s} selected={s === sport} onClick={() => setSport(s)} />)}
-        </div>
-        <div className="seg" role="group" aria-label="Range">
-          {(Object.keys(RANGES) as Range[]).map((r) => (
-            <button key={r} type="button" className={`t-label ${r === range ? "is-selected" : ""}`} aria-pressed={r === range} onClick={() => setRange(r)}>{r}</button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid">
-        <section className="panel col-8">
-          <div className="panel-head">
-            <h2 className="t-heading">{view.spec.lineLabel}</h2>
-            <TableToggle table={table} onToggle={() => setTable((t) => !t)} />
+    <div className="prog" style={{ ["--accent" as string]: T.accent, ["--hero" as string]: T.bg }}>
+      {DARK_PAGE && <DarkPage theme={T} />}
+      <h1 className="sr-only">Progression</h1>
+      <div className="prog-body">
+        <section className="hero" aria-label={`${SPORT_META[sport].name} fitness`}>
+          <div className="sport-tabs" role="tablist" aria-label="Sport">
+            {SPORT_ORDER.map((s) => {
+              const { Icon, name, color } = SPORT_META[s];
+              return (
+                <button key={s} role="tab" aria-selected={s === sport} className={`sport-tab ${s === sport ? "is-on" : ""}`}
+                  style={{ ["--c" as string]: color }} onClick={() => { setSport(s); setScrub(null); setFocus(null); }}>
+                  <Icon size={17} weight="light" aria-hidden /><span>{name}</span>
+                </button>
+              );
+            })}
           </div>
-          {table ? <DataTable columns={columns} rows={rows} /> : <ProgressionChart spec={view.spec} animKey={`${sport}-${range}`} />}
+
+          <div className="hero-head">
+            <div>
+              <span className="hero-eyebrow"><SportGlyph sport={sport} size={16} />{SPORT_META[sport].name} fitness</span>
+              <div className="hero-value">
+                <span className="hero-num">{Math.round(v.values[i])}</span>
+                <span className="hero-of">/ 100</span>
+              </div>
+              <div className="hero-sub">
+                {scrub !== null && <span className="hero-muted">{dayMonth(v.days[i])} · {parts.map((p) => `${SPORT_META[p.k].name} ${Math.round(p.at)}`).join(" · ")}</span>}
+              </div>
+            </div>
+            <div className="hero-side">
+              <span className="hero-muted">{RANGE_NAME[range]}</span>
+              <span className="hero-side-num">{change >= 0 ? "+" : "−"}{Math.abs(change).toFixed(0)}</span>
+            </div>
+          </div>
+
+          <div className="chart-wrap">
+            <LineChart days={v.days} values={v.values} accent={T.accent} onScrub={setScrub} animKey={`${sport}-${range}`}
+              band={focus && focus !== sport ? v.contrib[focus] : null} bandColor={focus ? SPORT_META[focus].color : undefined}
+              dots={dots} peakLabel={few ? undefined : peakLabel} dim={few} />
+          </div>
+
+          <div className="range-pills" role="group" aria-label="Range">
+            {(Object.keys(RANGES) as Range[]).map((r) => (
+              <button key={r} className={r === range ? "is-on" : ""} aria-pressed={r === range} onClick={() => { setRange(r); setScrub(null); }}>{r}</button>
+            ))}
+          </div>
         </section>
 
-        <Panel className="col-4">
-          {S.metric && view.lastPace && (
-            <div className="stat">
-              <span className="t-label muted">Pace @150</span>
-              <Figure size="l" value={pace(view.lastPace[1])} unit="/km" />
-              {view.startPace && <Change value={view.lastPace[1] - view.startPace[1]} unit=" s/km" />}
-            </div>
-          )}
-          {!view.cal && (
-            <div className="stat">
-              <span className="t-label muted">Fitness</span>
-              <Figure size="l" value={Math.round(100 * view.model(view.days.length - 1))} />
-            </div>
-          )}
-          <div className="stat">
-            <span className="t-label muted">Change</span>
-            <Figure value={signedText(view.delta.total, unitDigits)} unit={view.delta.unit === "%" ? "%" : "s/km"} />
-            <div>
-              {deltaOrder.filter((k) => view.delta.bySport[k] !== undefined).map((k) => (
-                <div key={k} className="split-row">
-                  <SportGlyph sport={k} size={16} />
-                  <span className="t-label">{SPORT_META[k].name}</span>
-                  <span className="t-fig-s">{signedText(view.delta.bySport[k]!, unitDigits)}</span>
-                </div>
+        <div className="prog-cards">
+          <section className="card card-built" aria-label="What built it" onMouseLeave={() => setFocus(null)}>
+            <span className="t-eyebrow">Built by</span>
+            <ul className="built-list">
+              {parts.map((p, k) => (
+                <li key={p.k} className={`${focus && focus !== p.k ? "is-faded" : ""} ${focus === p.k ? "is-focus" : ""}`}
+                  style={{ ["--c" as string]: SPORT_META[p.k].color, animationDelay: `${200 + k * 90}ms` }}
+                  onMouseEnter={() => setFocus(p.k)} onFocus={() => setFocus(p.k)} onBlur={() => setFocus(null)} tabIndex={0}>
+                  <span className="built-name"><SportGlyph sport={p.k} size={18} /><span>{SPORT_META[p.k].name}</span></span>
+                  <span className="built-pct">{Math.round((100 * p.now) / total)}<small>%</small></span>
+                  <span className="built-track"><span style={{ width: `${(100 * p.now) / total}%`, animationDelay: `${350 + k * 90}ms` }} /></span>
+                </li>
               ))}
-            </div>
-          </div>
-          <div className="stat">
-            <span className="t-label muted">Evidence</span>
-            <Evidence level={S.evidence} n={S.calibration?.n} />
-          </div>
-        </Panel>
+              {parts.length === 0 && <li className="built-empty">{DASH}</li>}
+            </ul>
+          </section>
+
+          <section className="card-side" aria-label="Key numbers">
+            <div className="kn"><span className="kn-label">Sessions</span><span className="kn-num">{v.own.length}</span><span className="kn-sub">{perWeek >= 0.1 ? `${perWeek.toFixed(1)} per week` : DASH}</span></div>
+            <div className="kn"><span className="kn-label">Training</span><span className="kn-num">{Math.round(hours)}<small>h</small></span><span className="kn-sub">{v.own.length ? `${Math.round((60 * hours) / v.own.length)} min avg` : DASH}</span></div>
+            {S.metric && paceNow ? (
+              <div className="kn is-accent"><span className="kn-label">Pace at 150 bpm</span><span className="kn-num">{pace(paceNow[1])}<small>/km</small></span><span className="kn-sub">{paceStart ? `${signed(paceNow[1] - paceStart[1])} s/km` : DASH}</span></div>
+            ) : (
+              <div className="kn is-accent"><span className="kn-label">Peak</span><span className="kn-num">{Math.round(v.values[peakI])}</span><span className="kn-sub">{dayMonth(peakDay)}</span></div>
+            )}
+            <div className="kn"><span className="kn-label">Last session</span><span className="kn-num">{lastSession ? <>{dayDiff(lastSession.day, d.synced)}<small>d ago</small></> : DASH}</span><span className="kn-sub">{lastSession ? `${Math.round(lastSession.durationMin)} min` : DASH}</span></div>
+          </section>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
-/** "+6.3" / "−1.2" / "0" with a real minus sign. */
-function signedText(v: number, digits: number) {
-  const r = Number(v.toFixed(digits));
-  return r > 0 ? `+${r.toFixed(digits)}` : r < 0 ? `−${Math.abs(r).toFixed(digits)}` : (0).toFixed(digits);
-}
+const signed = (x: number) => { const r = Math.round(x); return r > 0 ? `+${r}` : r < 0 ? `−${-r}` : "0"; };
