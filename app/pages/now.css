@@ -21,10 +21,10 @@
 .nrd-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .nrd-headrow .nrd-days > span { font-size: 12px; color: rgba(255,255,255,.5); text-align: center; }
 .nrd-headrow .nrd-days > span.is-today { color: #fff; }
-.nrd-row .nrd-days > i { display: block; height: 30px; border-radius: 9px; background: rgba(255,255,255, calc(.04 + .3 * var(--v) * var(--v)));
+.nrd-row .nrd-days > .nrd-cell { display: block; height: 30px; border-radius: 9px; background: rgba(255,255,255, calc(.04 + .3 * var(--v) * var(--v)));
   animation: fade-in 700ms var(--ease-out) both; transition: background 500ms; }
-.nrd-row .nrd-days > i.is-ready { background: rgba(255,255,255,.42); }
-.nrd-row .nrd-days > i.is-next { background: #fff; box-shadow: 0 0 18px rgba(255,255,255,.35); }
+.nrd-row .nrd-days > .nrd-cell.is-ready { background: rgba(255,255,255,.42); }
+.nrd-row .nrd-days > .nrd-cell.is-next { background: #fff; box-shadow: 0 0 18px rgba(255,255,255,.35); }
 .nrd-next { display: flex; justify-content: flex-end; }
 .nrd-sug { font-size: 15px; font-weight: 500; color: rgba(255,255,255,.75); white-space: nowrap; }
 .nrd-grid { grid-template-columns: minmax(130px, 1.2fr) 88px minmax(110px, 1fr) minmax(220px, 2.2fr) 128px; }
@@ -67,7 +67,7 @@ html.dark-page .nsleep .t-eyebrow, html.dark-page .nsleep .ns-title svg { color:
 
 @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } }
 @keyframes fade-in { from { opacity: 0; } }
-@media (max-height: 800px) { .nrd-row .nrd-days > i { height: 24px; } .nrd { padding-top: 20px; } }
+@media (max-height: 800px) { .nrd-row .nrd-days > .nrd-cell { height: 24px; } .nrd { padding-top: 20px; } }
 @media (max-width: 1100px) { .nrd-grid { grid-template-columns: minmax(120px, 1fr) 72px minmax(100px, 1fr) minmax(180px, 2fr) 96px; column-gap: 14px; } }
 @media (max-width: 1000px) { .nowx { height: auto; grid-template-columns: 1fr; } }
 /* Narrow desktop windows: drop "Last session" so the table fits inside its card */
@@ -75,3 +75,43 @@ html.dark-page .nsleep .t-eyebrow, html.dark-page .nsleep .ns-title svg { color:
   .nrd-grid { grid-template-columns: minmax(120px, 1.1fr) 76px minmax(170px, 2.2fr) 104px !important; column-gap: 16px; }
   .nrd-grid > :nth-child(3) { display: none; }
 }
+
+/* What if I say yes: cells are buttons. Hover previews, click keeps. */
+.nrd-row .nrd-days > .nrd-cell { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; height: 30px; border-radius: 9px; cursor: pointer;
+  background: rgba(255,255,255, calc(.04 + .3 * var(--v) * var(--v))); animation: fade-in 700ms var(--ease-out) both;
+  transition: background 500ms var(--ease-out), box-shadow 300ms var(--ease-out), transform 300ms var(--ease-out); }
+.nrd-row .nrd-days > .nrd-cell.is-ready { background: rgba(255,255,255,.42); }
+.nrd-row .nrd-days > .nrd-cell.is-next { background: #fff; box-shadow: 0 0 18px rgba(255,255,255,.35); }
+.nrd-row .nrd-days > .nrd-cell:hover, .nrd-row .nrd-days > .nrd-cell:focus-visible { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.85); }
+.nrd-row .nrd-days > .nrd-cell:disabled { cursor: not-allowed; }
+.nrd-row .nrd-days > .nrd-cell.is-yes { background: #fff; box-shadow: 0 0 0 2px #050505, 0 0 0 3.5px #fff; }
+.nrd-row .nrd-days > .nrd-cell.is-preview { background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 1.5px #fff; }
+.nrd-row .nrd-days > .nrd-cell .glyph { filter: none; }
+.nrd-row .nrd-days > .nrd-cell.is-yes .glyph { filter: none; }
+.nrd-was { display: block; font-size: 11px; color: rgba(255,255,255,.45); text-align: right; margin-top: 2px; }
+.nrd-next { flex-direction: column; align-items: flex-end; }
+
+/* The summary line: only takes space when you're considering something */
+/* Opens over the header row (no layout shift, so hovering never flickers); the labels fade out underneath. */
+.nrd { position: relative; }
+.nrd-wi { position: absolute; z-index: 2; left: 20px; right: 20px; top: 16px; height: 52px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  padding: 0 12px; border-radius: 16px; background: #1b1b1b; box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.08);
+  opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity 300ms var(--ease-out), transform 400ms var(--ease-out); }
+.nrd-wi.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.nrd-headrow { transition: opacity 300ms var(--ease-out); }
+.nrd.has-wi .nrd-headrow { opacity: 0; }
+.nrd-wi-what { display: flex; gap: 6px; flex-wrap: wrap; }
+.nrd-wi-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #fff; color: #000; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.nrd-wi-chip.is-preview { background: transparent; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); }
+.nrd-wi-effect { font-size: 13px; color: rgba(255,255,255,.75); min-width: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nrd-wi-effect b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+.nrd-wi-actions { display: flex; gap: 6px; }
+.nrd-wi-actions button { all: unset; cursor: pointer; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.1); transition: background 300ms; }
+.nrd-wi-actions button:hover, .nrd-wi-actions button:focus-visible { background: rgba(255,255,255,.2); }
+@media (max-height: 800px) { .nrd-row .nrd-days > .nrd-cell { height: 24px; } .nrd-wi { top: 10px; height: 46px; } }
+@media (max-width: 640px) { .nrd-wi { position: static; display: none; grid-template-columns: 1fr auto; grid-template-rows: auto auto; height: auto; gap: 6px 8px; padding: 10px 12px; margin-bottom: 10px; box-shadow: none; background: rgba(255,255,255,.07); } .nrd-wi.is-on { display: grid; } .nrd.has-wi .nrd-headrow { opacity: 1; } .nrd-wi-effect { grid-column: 1 / -1; grid-row: 2; } .nrd-wi-actions { grid-column: 2; grid-row: 1; } .nrd-row .nrd-days > .nrd-cell { height: 22px !important; border-radius: 6px; } }
+
+/* Added to your plan: solid white with the sport icon, no ring */
+.nrd-row .nrd-days > .nrd-cell.is-planned { background: #fff; box-shadow: 0 0 14px rgba(255,255,255,.25); }
+.nrd-wi-actions button.is-primary { background: #fff; color: #000; }
+.nrd-wi-actions button.is-primary:hover, .nrd-wi-actions button.is-primary:focus-visible { background: rgba(255,255,255,.85); }

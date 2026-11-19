@@ -30,7 +30,7 @@ export const SESSION: Record<Kind, { sport: Sport | null; name: string; detail: 
 
 const CAPS: Capacity[] = ["engine", "speed", "legs", "pull"];
 const NAME: Record<Capacity, string> = { engine: "Engine", speed: "Speed", legs: "Legs", pull: "Grip" };
-const MAX = 3, REF = 45;
+export const MAX = 3, REF = 45;
 type P = { recovered_threshold: number; tau_fat: Record<Capacity, number>; W: Record<string, Record<string, number>>; D: Record<string, Record<string, number>> };
 
 export function demand(p: P, s: Sport): Record<Capacity, number> {
@@ -42,6 +42,30 @@ export function readiness(p: P, s: Sport, f: Record<Capacity, number>) {
   const sum = CAPS.reduce((a, c) => a + w[c], 0) || 1;
   return 1 - CAPS.reduce((a, c) => a + w[c] * Math.max(0, Math.min(1, (f[c] - thr) / (MAX - thr))), 0) / sum;
 }
+/** Fatigue one session adds, per capacity (same units as the engine's fatNorm). */
+export function sessionCost(p: P, sport: Sport, load: number, gymKind: "gymFull" | "gymUpper" = "gymFull"): Record<Capacity, number> {
+  const d = sport === "gym" ? (gymKind === "gymUpper" ? { engine: 0.05, pull: 0.9 } : { engine: 0.05, legs: 0.5, pull: 0.45 }) : p.D[sport] ?? {};
+  return Object.fromEntries(CAPS.map((c) => [c, ((d as Record<string, number>)[c] ?? 0) * load / REF])) as Record<Capacity, number>;
+}
+/** A typical session load for this sport: median of your last 10. */
+export function typicalLoad(d: DataJson, sport: Sport): number {
+  const xs = d.sessions.filter((s) => s.sport === sport).slice(-10).map((s) => s.load).sort((a, b) => a - b);
+  return xs.length ? xs[Math.floor(xs.length / 2)] : 60;
+}
+/** Morning fatigue per capacity for each of the next n days, if you rest except for the given sessions. */
+export function fatigueDays(d: DataJson, extra: { day: string; sport: Sport }[], n = 30): Record<Capacity, number>[] {
+  const p = d.params as unknown as P;
+  let f = Object.fromEntries(CAPS.map((c) => [c, d.capacities[c].fatNorm])) as Record<Capacity, number>;
+  const out: Record<Capacity, number>[] = [];
+  for (let i = 0; i < n; i++) {
+    out.push({ ...f });
+    const day = addDays(d.synced, i);
+    for (const y of extra) if (y.day === day) { const c = sessionCost(p, y.sport, typicalLoad(d, y.sport)); for (const k of CAPS) f[k] += c[k]; }
+    f = Object.fromEntries(CAPS.map((c) => [c, f[c] * Math.exp(-1 / p.tau_fat[c])])) as Record<Capacity, number>;
+  }
+  return out;
+}
+
 function cost(p: P, k: Kind): Record<Capacity, number> {
   const s = SESSION[k];
   if (!s.sport) return { engine: 0, speed: 0, legs: 0, pull: 0 };
@@ -51,16 +75,38 @@ function cost(p: P, k: Kind): Record<Capacity, number> {
 
 export interface PlanDay { day: string; kind: Kind; ready: number | null; why: string; runReady: number }
 
-export function plan(d: DataJson, days = 10): PlanDay[] {
-  // Race backbone first: if the free plan has no intervals, reserve the most run-ready day in the window and replan.
-  let out = simulate(d, days, {});
+const YES_KIND: Record<Sport, Kind> = { running: "easy", football: "football", tennis: "tennis", bouldering: "boulder", gym: "gymFull" };
+
+/** The 10-day plan. Sessions you've said yes to are fixed; everything else is planned around them. */
+export function plan(d: DataJson, days = 10, yeses: { day: string; sport: Sport }[] = []): PlanDay[] {
+  return planFull(d, days, yeses).days;
+}
+
+/** Plan plus the race-morning running readiness (for the race-day forecast). */
+export function planFull(d: DataJson, days = 10, yeses: { day: string; sport: Sport }[] = []) {
+  const race = GOALS[0].date!;
+  const n = Math.max(days, dayDiff(d.synced, race) + 1);
+  const fixed: Record<string, Kind> = Object.fromEntries(yeses.map((y) => {
+    const k = YES_KIND[y.sport];
+    return [y.day, k === "gymFull" && dayDiff(y.day, race) <= 10 ? "gymUpper" : k];
+  }));
+  // Race backbone first: if the free plan has no intervals, reserve the most run-ready free day in the window and replan.
+  let out = simulate(d, n, fixed);
   if (!out.some((x) => x.kind === "intervals")) {
-    const race = GOALS[0].date!;
-    const pickable = out.filter((x) => { const t = dayDiff(x.day, race); const wd = new Date(x.day + "T12:00:00Z").getUTCDay(); return t >= 5 && t <= 9 && wd !== 0 && x.kind !== "football"; });
+    const pickable = out.filter((x) => { const t = dayDiff(x.day, race); const wd = new Date(x.day + "T12:00:00Z").getUTCDay(); return t >= 5 && t <= 9 && wd !== 0 && x.kind !== "football" && !fixed[x.day]; });
     const best = pickable.sort((a, b) => b.runReady - a.runReady)[0];
-    if (best) out = simulate(d, days, { [best.day]: "intervals" });
+    if (best) out = simulate(d, n, { ...fixed, [best.day]: "intervals" });
   }
-  return out;
+  const raceDay = out.find((x) => x.day === race);
+  return { days: out.slice(0, days), raceReady: raceDay?.runReady ?? null, yesDays: new Set(Object.keys(fixed)) };
+}
+
+/** Race-day 5K forecast range: your current estimate, a small freshness bonus, minus how tired your running capacities are that morning. */
+export function raceForecast(d: DataJson, raceReady: number | null): { lo: number; mid: number; hi: number } | null {
+  const e = est5k(d);
+  if (!e || raceReady == null) return null;
+  const mid = e.min * 0.97 * (1 + 0.12 * (1 - raceReady));
+  return { lo: mid * 0.98, mid, hi: mid * 1.02 };
 }
 
 function simulate(d: DataJson, days: number, forced: Record<string, Kind>): PlanDay[] {
@@ -85,7 +131,8 @@ function simulate(d: DataJson, days: number, forced: Record<string, Kind>): Plan
     const options: { k: Kind; score: number; why: string }[] = [];
     const add = (k: Kind, ok: boolean, score: number, why: string) => { if (ok) options.push({ k, score, why }); };
 
-    if (forced[day]) add(forced[day], true, 1000, forced[day] === "intervals" ? "Your one key session before the race" : "Planned");
+    if (toRace === 0) { /* race day */ }
+    else if (forced[day]) add(forced[day], true, 1000, forced[day] === "intervals" ? "Your one key session before the race" : "You said yes");
     else if (toRace === 2) add("openers", true, 100, "Two days before the race");
     else if (toRace === 1 || toRace === 3) { /* rest */ }
     else {
@@ -103,7 +150,7 @@ function simulate(d: DataJson, days: number, forced: Record<string, Kind>): Plan
     const best = options.sort((a, b) => b.score - a.score)[0];
     const kind: Kind = best?.k ?? "rest";
     const sp = SESSION[kind].sport;
-    out.push({ day, kind, ready: sp ? r(sp) : null, runReady: r("running"), why: best?.why ?? (toRace === 1 ? "Race tomorrow" : toRace === 3 ? "Fresh legs for race day" : streak >= 3 ? "Three days in a row" : `${NAME[[...CAPS].sort((a, b) => f[b] - f[a])[0]]} needs a day`) });
+    out.push({ day, kind, ready: sp ? r(sp) : null, runReady: r("running"), why: best?.why ?? (toRace === 0 ? "Race day" : toRace === 1 ? "Race tomorrow" : toRace === 3 ? "Fresh legs for race day" : streak >= 3 ? "Three days in a row" : `${NAME[[...CAPS].sort((a, b) => f[b] - f[a])[0]]} needs a day`) });
 
     if (sp) { last[sp] = i; lastKind[kind] = i; streak++; const c = cost(p, kind); for (const k of CAPS) f[k] += c[k]; } else streak = 0;
     f = Object.fromEntries(CAPS.map((c) => [c, f[c] * Math.exp(-1 / p.tau_fat[c])])) as Record<Capacity, number>;

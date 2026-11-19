@@ -14,7 +14,9 @@ import type { ReactNode } from "react";
 import { DarkPage } from "../components/DarkPage";
 import { LineChart } from "../components/LineChart";
 import { SportGlyph } from "../components/ui";
-import { GOALS, SESSION, plan, mmss } from "../goals/plan";
+import { GOALS, SESSION, planFull, raceForecast, mmss } from "../goals/plan";
+import { useWhatIf } from "../whatif/store";
+import { useRatings } from "../goals/ratings";
 import { THEME } from "./Progression";
 import "./progression-page.css";
 import "./goals.css";
@@ -23,16 +25,23 @@ const TARGET_5K = 25;
 
 export function GoalsPage() {
   const d = useData();
-  const days = useMemo(() => plan(d), [d]);
+  const wi = useWhatIf();
+  const planned = useMemo(() => planFull(d, 10, wi.planned), [d, wi.planned]);
+  const days = planned.days;
+  const forecast = useMemo(() => raceForecast(d, planned.raceReady), [d, planned.raceReady]);
   const [sport, setSport] = useState<Sport>(GOALS[0].sport);
   const g = GOALS.find((x) => x.sport === sport)!;
   const T = THEME[sport];
   const race = GOALS[0].date!;
   const rel = (day: string) => { const n = dayDiff(d.synced, day); return n === 0 ? "Today" : n === 1 ? "Tomorrow" : `${weekday(day)} ${dayMonth(day)}`; };
-  const pick = (s: Sport) => { setSport(s); setFocus(null); };
+  const pick = (s: Sport) => { setSport(s); setFocus(null); setRateId(null); };
 
   const [focus, setFocus] = useState<number | string | null>(null);
-  const v = useMemo(() => goalView(d, sport), [d, sport]);
+  const ratings = useRatings(d);
+  const [rateId, setRateId] = useState<string | null>(null);
+  const rateSession = rateId ? d.sessions.find((s) => s.id === rateId) : undefined;
+  const rate = useMemo(() => ({ get: ratings.get, pick: setRateId, selected: rateId }), [ratings.get, rateId]);
+  const v = useMemo(() => goalView(d, sport, forecast, rate), [d, sport, forecast, rate]);
   const left = g.date ? dayDiff(d.synced, g.date) : null;
   const mine = days.filter((x) => SESSION[x.kind].sport === sport);
   const hover = v.hover(focus);
@@ -71,7 +80,23 @@ export function GoalsPage() {
             </div>
           </div>
 
-          <div className="chart-wrap">{v.chart(T.accent, setFocus)}</div>
+          <div className="chart-wrap g-chart">
+            {v.chart(T.accent, setFocus)}
+            {rateSession && (
+              <div className="g-rate" role="dialog" aria-label="Rate this session" onKeyDown={(e) => e.key === "Escape" && setRateId(null)}>
+                <div className="g-rate-head">
+                  <span><b>How did you play?</b> {weekday(rateSession.day)} {dayMonth(rateSession.day)}</span>
+                  <button type="button" className="g-rate-x" onClick={() => setRateId(null)} aria-label="Close">×</button>
+                </div>
+                <div className="g-rate-row">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                    <button key={n} type="button" className={ratings.get(rateSession.id) === n ? "is-on" : ""}
+                      onClick={() => { ratings.set(rateSession.id, n); setRateId(null); }}>{n}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
         <div className="prog-cards">
@@ -82,9 +107,9 @@ export function GoalsPage() {
             {mine.length ? (
               <ul className="g-next-list">
                 {mine.slice(0, 4).map((x, i) => (
-                  <li key={x.day} style={{ animationDelay: `${200 + i * 80}ms` }}>
+                  <li key={x.day} className={planned.yesDays.has(x.day) ? "is-yes" : ""} style={{ animationDelay: `${200 + i * 80}ms` }}>
                     <span className="g-day">{rel(x.day)}</span>
-                    <span className="g-what"><b>{SESSION[x.kind].name}</b><small>{SESSION[x.kind].detail}</small></span>
+                    <span className="g-what"><b>{SESSION[x.kind].name}</b><small>{planned.yesDays.has(x.day) ? "In your plan" : SESSION[x.kind].detail}</small></span>
                   </li>
                 ))}
                 {sport === "running" && (
@@ -109,7 +134,7 @@ export function GoalsPage() {
             const s = SESSION[x.kind];
             const on = s.sport === sport;
             return (
-              <button key={x.day} type="button" className={`gs ${on ? "is-on" : ""} ${s.sport ? "" : "is-rest"} ${i === 0 ? "is-today" : ""}`}
+              <button key={x.day} type="button" className={`gs ${on ? "is-on" : ""} ${s.sport ? "" : "is-rest"} ${i === 0 ? "is-today" : ""} ${planned.yesDays.has(x.day) ? "is-yes" : ""}`}
                 title={`${rel(x.day)}: ${s.name}${s.detail ? `, ${s.detail}` : ""}`} disabled={!s.sport} onClick={() => s.sport && pick(s.sport)}
                 style={{ animationDelay: `${150 + i * 40}ms` }}>
                 <span className="gs-date"><small>{weekday(x.day).slice(0, 1)}</small>{Number(x.day.slice(8))}</span>
@@ -144,7 +169,8 @@ const MO = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"
 const GRADES = ["V0", "V1", "V2", "V3", "V4", "V5", "V6", "V7"];
 const REGIONS: [string, string][] = [["chest", "Chest"], ["back", "Back"], ["shoulders", "Shoulders"], ["arms", "Arms"], ["legs", "Legs"], ["core", "Core"]];
 
-function goalView(d: DataJson, sport: Sport): View {
+type Rate = { get: (id: string) => number | undefined; pick: (id: string | null) => void; selected: string | null };
+function goalView(d: DataJson, sport: Sport, forecast: { lo: number; hi: number } | null, rate: Rate): View {
   const own = d.sessions.filter((s) => s.sport === sport).sort((a, b) => a.day.localeCompare(b.day));
   const empty = (msg: string) => () => <div className="g-empty">{msg}</div>;
 
@@ -163,7 +189,7 @@ function goalView(d: DataJson, sport: Sport): View {
       hover: (f) => typeof f === "number" ? { big: mmss(60 - vals[f]), sub: `Best estimate on ${dayMonth(runs[f].day)}` } : null,
       tiles: [
         { label: "Pace needed", num: <>5:00<small>/km</small></>, sub: now != null ? `Now ${mmss(now / 5)}/km` : DASH },
-        { label: "Race", num: <>{dayDiff(d.synced, race)}<small>days</small></>, sub: `${weekday(race)} ${dayMonth(race)}` },
+        { label: "Race-day forecast", num: forecast ? <>{mmss(forecast.lo)}<small>–{mmss(forecast.hi)}</small></> : DASH, sub: `In ${dayDiff(d.synced, race)} days, with this plan` },
       ],
     };
   }
@@ -199,42 +225,64 @@ function goalView(d: DataJson, sport: Sport): View {
     };
   }
 
-  if (sport === "football") {
-    const games = own.filter((s) => dayDiff(s.day, d.synced) <= 182);
-    const withKm = games.filter((s) => s.km);
-    const km = withKm.reduce((a, s) => a + s.km!, 0);
-    const bars: Bar[] = games.map((s) => ({ key: s.id, label: s.km ? `${s.km.toFixed(1)} km` : `${Math.round(s.durationMin)} min`, value: s.km ?? 0 }));
-    const best = withKm.length ? Math.max(...withKm.map((s) => s.km!)) : 0;
-    return {
-      big: km.toFixed(0), unit: "km", sub: `Covered in ${games.length} games, past 6 months`,
-      side: { label: "Games", value: games.length },
-      chart: (accent, on) => games.length ? <Bars bars={bars} accent={accent} onHover={on} animKey="goal-football" ticks={[dayMonth(games[0].day), dayMonth(games.at(-1)!.day)]} /> : empty("No games yet")(),
-      hover: (f) => typeof f === "number" ? { big: games[f].km ? games[f].km!.toFixed(1) : DASH, unit: "km", sub: `${weekday(games[f].day)} ${dayMonth(games[f].day)}, ${Math.round(games[f].durationMin)} min` } : null,
-      tiles: [
-        { label: "Per game", num: <>{withKm.length ? (km / withKm.length).toFixed(1) : DASH}<small>km</small></>, sub: "On average" },
-        { label: "Longest", num: <>{best ? best.toFixed(1) : DASH}<small>km</small></>, sub: "In one game" },
-      ],
+  if (sport === "football" || sport === "tennis") {
+    // Chart as before (football: km per game, tennis: games per month). The goal is to play better, so the big
+    // number is your average self-rating and the side shows how it's moving. Hover a bar for the rating; click to rate.
+    const games = own.filter((s) => dayDiff(s.day, d.synced) <= (sport === "tennis" ? 365 : 182));
+    const r = (s: (typeof games)[number]) => rate.get(s.id);
+    const rated = games.filter((s) => r(s) != null);
+    const avg = (xs: typeof games) => xs.length ? xs.reduce((a, s) => a + r(s)!, 0) / xs.length : null;
+    const last5 = avg(rated.slice(-5)), prev5 = avg(rated.slice(-10, -5));
+    const trend = last5 != null && prev5 != null ? last5 - prev5 : null;
+    const signed1 = (x: number) => `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(1)}`;
+    const rateText = (n: number | null | undefined) => n != null ? `${n.toFixed(Number.isInteger(n) ? 0 : 1)}/10` : "not rated";
+    const head = {
+      big: last5 != null ? last5.toFixed(1) : DASH, unit: last5 != null ? "/ 10" : undefined,
+      sub: rated.length ? `Average rating, last ${Math.min(5, rated.length)} ${rated.length === 1 ? "game" : "games"}` : "No games rated yet",
+      side: { label: "Progression", value: trend != null ? signed1(trend) : DASH, note: trend != null ? "Last 5 vs 5 before" : undefined },
     };
-  }
 
-  if (sport === "tennis") {
+    if (sport === "football") {
+      const withKm = games.filter((s) => s.km);
+      const km = withKm.reduce((a, s) => a + s.km!, 0);
+      const best = withKm.length ? Math.max(...withKm.map((s) => s.km!)) : 0;
+      const bars: Bar[] = games.map((s) => ({ key: s.id, label: r(s) != null ? `${r(s)}/10` : `${(s.km ?? 0).toFixed(1)} km`, value: s.km ?? 0 }));
+      const sel = rate.selected ? games.findIndex((s) => s.id === rate.selected) : -1;
+      return {
+        ...head,
+        chart: (accent, on) => games.length
+          ? <Bars bars={bars} accent={accent} onHover={on} onPick={(i) => rate.pick(games[i].id)} selected={sel >= 0 ? sel : null}
+              animKey="goal-football" ticks={[dayMonth(games[0].day), dayMonth(games.at(-1)!.day)]} />
+          : empty("No games yet")(),
+        hover: (f) => {
+          if (typeof f !== "number") return null;
+          const g = games[f];
+          return { big: g.km ? g.km.toFixed(1) : DASH, unit: g.km ? "km" : undefined, sub: `${weekday(g.day)} ${dayMonth(g.day)}, ${Math.round(g.durationMin)} min, rated ${rateText(r(g))}` };
+        },
+        tiles: [
+          { label: "Per game", num: <>{withKm.length ? (km / withKm.length).toFixed(1) : DASH}<small>km</small></>, sub: `${games.length} games, past 6 months` },
+          { label: "Longest", num: <>{best ? best.toFixed(1) : DASH}<small>km</small></>, sub: "In one game" },
+        ],
+      };
+    }
+
     const months = Array.from({ length: 6 }, (_, i) => { const m = new Date(d.synced + "T12:00:00Z"); m.setUTCMonth(m.getUTCMonth() - 5 + i, 1); return m.toISOString().slice(0, 7); });
-    const inMonth = (m: string) => own.filter((s) => s.day.startsWith(m));
-    const bars: Bar[] = months.map((m) => ({ key: m, label: `${inMonth(m).length}`, value: inMonth(m).length }));
-    const year = own.filter((s) => s.day.startsWith(d.synced.slice(0, 4)));
-    const hours = year.reduce((a, s) => a + s.durationMin, 0) / 60;
+    const inMonth = (m: string) => games.filter((s) => s.day.startsWith(m));
+    const bars: Bar[] = months.map((m) => { const ss = inMonth(m); const a = avg(ss.filter((s) => r(s) != null)); return { key: m, label: ss.length ? (a != null ? `${a.toFixed(1)}/10` : `${ss.length}`) : "0", value: ss.length }; });
+    const hours = games.reduce((a, s) => a + s.durationMin, 0) / 60;
     return {
-      big: year.length, unit: year.length === 1 ? "game" : "games", sub: `This year, ${hours.toFixed(1)} h on court`,
-      side: { label: "Time played", value: <>{hours.toFixed(1)}<small> h</small></> },
-      chart: (accent, on) => <Bars bars={bars} accent={accent} onHover={on} animKey="goal-tennis" ticks={[MO[Number(months[0].slice(5)) - 1], MO[Number(months[5].slice(5)) - 1]]} />,
+      ...head,
+      chart: (accent, on) => <Bars bars={bars} accent={accent} onHover={on} onPick={(i) => { const ss = inMonth(months[i]); if (ss.length) rate.pick(ss.at(-1)!.id); }}
+        animKey="goal-tennis" ticks={[MO[Number(months[0].slice(5)) - 1], MO[Number(months[5].slice(5)) - 1]]} />,
       hover: (f) => {
         if (typeof f !== "number") return null;
-        const ss = inMonth(months[f]);
-        return { big: ss.length, unit: ss.length === 1 ? "game" : "games", sub: `${MO[Number(months[f].slice(5)) - 1]}, ${(ss.reduce((a, s) => a + s.durationMin, 0) / 60).toFixed(1)} h` };
+        const ss = inMonth(months[f]); const a = avg(ss.filter((s) => r(s) != null));
+        return { big: a != null ? a.toFixed(1) : DASH, unit: a != null ? "/ 10" : undefined,
+          sub: `${MO[Number(months[f].slice(5)) - 1]}: ${ss.length} ${ss.length === 1 ? "game" : "games"}, ${(ss.reduce((x, s) => x + s.durationMin, 0) / 60).toFixed(1)} h${ss.length && a == null ? `, ${rateText(null)}` : ""}` };
       },
       tiles: [
-        { label: "Per game", num: <>{year.length ? Math.round((60 * hours) / year.length) : DASH}<small>min</small></>, sub: "On average" },
-        { label: "Longest", num: <>{own.length ? Math.round(Math.max(...own.map((s) => s.durationMin))) : DASH}<small>min</small></>, sub: "In one game" },
+        { label: "Time played", num: <>{hours.toFixed(1)}<small>h</small></>, sub: `${games.length} ${games.length === 1 ? "game" : "games"}, past year` },
+        { label: "Per game", num: <>{games.length ? Math.round((60 * hours) / games.length) : DASH}<small>min</small></>, sub: "On average" },
       ],
     };
   }

@@ -20,7 +20,9 @@ const data = runEngine({ sessions, nights, hrMax: profile.hrMax, tz, today, para
 const ms = performance.now() - t0;
 // Bouldering grades aren't recorded by either device: climbs.json is a hand log, { "2026-11-10": { "V3": 4, "V4": 1 } }.
 const climbs = existsSync("climbs.json") ? JSON.parse(readFileSync("climbs.json", "utf8")) : {};
-writeJson("public/data.json", { ...data, climbs, generatedAt: new Date().toISOString() });
+// How well you played (football, tennis) isn't recorded by either device: ratings.json is a hand log, { "<session id>": 7 }.
+const ratings = existsSync("ratings.json") ? JSON.parse(readFileSync("ratings.json", "utf8")) : {};
+writeJson("public/data.json", { ...data, climbs, ratings, generatedAt: new Date().toISOString() });
 
 const fx = generateFixture(today);
 const fxData = runEngine({ ...fx, hrMax: 195, tz, today, params: params as Params });

@@ -37,6 +37,7 @@ export interface DataJson {
   params: Params;
   nights: Night[];
   generatedAt?: string;
+  ratings?: Record<string, number>;                               // session id → your 1–10 rating, from ratings.json
   climbs?: Record<string, Record<string, number>>;                 // day → { "V3": 4, ... } from climbs.json (added by sync/build.ts)                                             // set by sync/build.ts                                                  // last 60 days: sleep, HRV, resting HR
 }
 

@@ -31,7 +31,7 @@
   .nrd-row .nrd-pct { grid-area: pct; font-size: 30px !important; }
   .nrd-row .nrd-last { display: none; }
   .nrd-row .nrd-days { grid-area: days; gap: 4px; }
-  .nrd-row .nrd-days > i { height: 18px !important; border-radius: 6px; }
+  .nrd-row .nrd-days > .nrd-cell { height: 18px !important; border-radius: 6px; }
   .nrd-row .nrd-next { grid-area: next; align-self: center; }
   .nrd-sug { font-size: 13px; }
   .ns-num { font-size: 26px !important; }

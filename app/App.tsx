@@ -8,6 +8,7 @@ import { NowPage } from "./pages/Now";
 import { ProgressionPage } from "./pages/Progression";
 import { GoalsPage } from "./pages/Goals";
 import { KitPage } from "./pages/Kit";
+import { WhatIfProvider } from "./whatif/store";
 import "./shell.css";
 import "./mobile.css";
 
@@ -54,7 +55,7 @@ export function App() {
   let body: ReactNode;
   if (state.status === "loading") body = null;
   else if (state.status === "error") body = <p className="t-label muted"><Warning size={16} aria-label="Error" /> {DASH}</p>;
-  else body = route === "now" ? <NowPage /> : route === "progression" ? <ProgressionPage /> : route === "goals" ? <GoalsPage /> : <KitPage />;
+  else body = <WhatIfProvider synced={state.data.synced}>{route === "now" ? <NowPage /> : route === "progression" ? <ProgressionPage /> : route === "goals" ? <GoalsPage /> : <KitPage />}</WhatIfProvider>;
 
   return (
     <>

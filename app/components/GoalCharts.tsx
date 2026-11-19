@@ -12,11 +12,12 @@ function useSize<T extends HTMLElement>() {
   return [ref, s] as const;
 }
 
-export interface Bar { key: string; label: string; value: number; parts?: { key: string; value: number }[] }
+export interface Bar { key: string; label: string; value: number; parts?: { key: string; value: number }[]; ghost?: boolean }
 
 /** Vertical bars (optionally stacked by `parts`). Hover reports the index; others dim. */
-export function Bars({ bars, accent, onHover, partShade, animKey, ticks }: {
+export function Bars({ bars, accent, onHover, partShade, animKey, ticks, max: fixedMax, onPick, selected }: {
   bars: Bar[]; accent: string; onHover: (i: number | null) => void; partShade?: (key: string) => number; animKey: string; ticks?: [string, string];
+  max?: number; onPick?: (i: number) => void; selected?: number | null;
 }) {
   const [ref, { w, h }] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
@@ -24,7 +25,7 @@ export function Bars({ bars, accent, onHover, partShade, animKey, ticks }: {
   const n = Math.max(1, bars.length);
   const gap = Math.min(10, Math.max(2, (w / n) * 0.28));
   const bw = Math.max(4, (w - gap * (n - 1)) / n);
-  const max = Math.max(1e-9, ...bars.map((b) => b.value));
+  const max = fixedMax ?? Math.max(1e-9, ...bars.map((b) => b.value));
   const hh = h - pad.top - pad.bottom;
   const set = (i: number | null) => { setHover(i); onHover(i); };
   return (
@@ -33,15 +34,17 @@ export function Bars({ bars, accent, onHover, partShade, animKey, ticks }: {
         {bars.map((b, i) => {
           const x = i * (bw + gap), bh = (hh * b.value) / max;
           let y0 = pad.top + hh;
-          const dim = hover !== null && hover !== i;
+          const dim = (hover !== null && hover !== i) || (selected != null && selected !== i);
           return (
-            <g key={b.key} className={`gc-bar ${dim ? "is-dim" : ""}`} style={{ animationDelay: `${120 + i * 25}ms` }} onPointerEnter={() => set(i)}>
+            <g key={b.key} className={`gc-bar ${dim ? "is-dim" : ""} ${onPick ? "is-pickable" : ""} ${selected === i ? "is-selected" : ""}`} style={{ animationDelay: `${120 + i * 25}ms` }}
+              onPointerEnter={() => set(i)} onClick={() => onPick?.(i)}>
               <rect x={x} y={pad.top} width={bw} height={hh} fill="transparent" />
+              {b.ghost && <rect x={x + 0.75} y={pad.top + hh * 0.72} width={bw - 1.5} height={hh * 0.28 - 0.75} rx={Math.min(6, bw / 2)} className="gc-ghost" />}
               {b.parts && partShade ? b.parts.map((p) => {
                 const ph = (hh * p.value) / max; y0 -= ph;
                 return <rect key={p.key} x={x} y={y0 + 1} width={bw} height={Math.max(0, ph - 2)} rx={Math.min(5, bw / 2)} fill={accent} fillOpacity={partShade(p.key)} />;
-              }) : <rect x={x} y={pad.top + hh - bh} width={bw} height={Math.max(2, bh)} rx={Math.min(6, bw / 2)} fill={accent} fillOpacity={0.85} />}
-              {hover === i && <text x={x + bw / 2} y={pad.top + hh - bh - 10} className="gc-val" textAnchor="middle">{b.label}</text>}
+              }) : !b.ghost && <rect x={x} y={pad.top + hh - bh} width={bw} height={Math.max(2, bh)} rx={Math.min(6, bw / 2)} fill={accent} fillOpacity={0.85} />}
+              {hover === i && <text x={x + bw / 2} y={b.ghost ? pad.top + hh * 0.72 - 10 : pad.top + hh - bh - 10} className="gc-val" textAnchor="middle">{b.label}</text>}
             </g>
           );
         })}
