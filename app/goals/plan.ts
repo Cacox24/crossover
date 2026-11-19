@@ -6,13 +6,13 @@ import type { DataJson } from "../../engine/index";
 import { addDays, dayDiff } from "../../engine/time";
 
 export interface Goal { sport: Sport; title: string; place?: string; date?: string }
-export const GOALS: Goal[] = [
+export const GOALS: Goal[] = [   // same order as everywhere else: running, football, tennis, bouldering, gym
   { sport: "running", title: "Sub 25:00 5K", place: "Regent's Park", date: "2026-11-28" },
-  { sport: "bouldering", title: "Climb V5", date: "2026-12-31" },
-  { sport: "gym", title: "Improve fitness" },
   { sport: "football", title: "Play better" },
   { sport: "tennis", title: "Play better" },
-];
+  { sport: "bouldering", title: "Climb V5", date: "2026-12-31" },
+  { sport: "gym", title: "Improve fitness" },
+]
 
 export type Kind = "intervals" | "tempo" | "easy" | "openers" | "boulder" | "gymFull" | "gymUpper" | "football" | "tennis" | "rest";
 export const SESSION: Record<Kind, { sport: Sport | null; name: string; detail: string; load: number; key?: boolean }> = {

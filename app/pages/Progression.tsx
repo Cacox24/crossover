@@ -133,7 +133,7 @@ export function ProgressionPage() {
         <div className="prog-cards">
           <section className="card card-built" aria-label="What built it" onMouseLeave={() => setFocus(null)}>
             <span className="t-eyebrow">Built by</span>
-            <ul className="built-list">
+            <ul className={`built-list ${parts.length >= 5 ? "is-dense" : ""}`}>
               {parts.map((p, k) => (
                 <li key={p.k} className={`${focus && focus !== p.k ? "is-faded" : ""} ${focus === p.k ? "is-focus" : ""}`}
                   style={{ ["--c" as string]: SPORT_META[p.k].color, animationDelay: `${200 + k * 90}ms` }}

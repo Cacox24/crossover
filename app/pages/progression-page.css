@@ -1,4 +1,4 @@
-.prog { display: flex; flex-direction: column; height: calc(100vh - 72px - var(--main-pad, 72px)); min-height: 560px; }
+.prog { display: flex; flex-direction: column; height: calc(100vh - 72px - var(--main-pad, 72px)); min-height: 480px; }
 .prog-top { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .prog-title { font-size: 44px; line-height: 48px; }
 .prog-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(320px, 1fr); gap: 16px; }
@@ -185,3 +185,16 @@ html.dark-page .kn.is-accent { background: color-mix(in srgb, var(--hero) 92%, t
 html.dark-page .topbar { background: color-mix(in srgb, var(--page-tint) 70%, transparent); backdrop-filter: blur(24px) saturate(1.3); }
 
 #root { position: relative; z-index: 1; }
+
+/* Five "Built by" rows (gym): pack tighter so the tiles still end level with the hero */
+.card-built:has(.built-list.is-dense) { gap: 12px; padding-top: 22px; padding-bottom: 20px; }
+.built-list.is-dense { gap: 12px; }
+.built-list.is-dense li { row-gap: 7px; }
+.built-list.is-dense .built-pct { font-size: 28px; }
+@media (max-height: 800px) {
+  .card-built:has(.built-list.is-dense) { gap: 8px; padding-top: 16px; padding-bottom: 14px; }
+  .built-list.is-dense { gap: 7px; }
+  .built-list.is-dense li { row-gap: 5px; }
+  .built-list.is-dense .built-pct { font-size: 22px; }
+}
+@media (max-height: 700px) { .prog-cards .card-side { min-height: 150px; } .kn { padding: 14px 18px; } }
